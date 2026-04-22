@@ -1,0 +1,21 @@
+﻿{
+    "name":  "jamestyle-analytics",
+    "version":  "1.0.0",
+    "type":  "module",
+    "scripts":  {
+                    "dev":  "wrangler dev",
+                    "deploy":  "wrangler deploy",
+                    "db:migrate":  "wrangler d1 migrations apply jamestyle-db",
+                    "db:create":  "wrangler d1 create jamestyle-db"
+                },
+    "dependencies":  {
+                         "hono":  "^4.6.14",
+                         "drizzle-orm":  "^0.38.2"
+                     },
+    "devDependencies":  {
+                            "@cloudflare/workers-types":  "^4.20241218.0",
+                            "typescript":  "^5.7.2",
+                            "wrangler":  "^3.95.0"
+                        },
+    "packageManager":  "pnpm@10.32.1"
+}
