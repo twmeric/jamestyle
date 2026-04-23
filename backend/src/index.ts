@@ -249,6 +249,22 @@ app.get("/api/public/analytics/timeline", async (c) => {
 });
 
 // ============================================================
+// EDGESPARK AUTH COMPATIBILITY (dead code shim)
+// ============================================================
+app.get("/api/_es/config", (c) => {
+  return c.json({
+    disableSignUp: true,
+    enableAnonymous: false,
+    providerEmailPassword: { enabled: false, config: {} },
+    providerGoogle: { enabled: false, config: {} },
+  });
+});
+
+app.all("/api/_es/auth/*", (c) => {
+  return c.json({ error: "Auth disabled" }, 404);
+});
+
+// ============================================================
 // ADMIN: RESET ALL DATA
 // ============================================================
 app.post("/api/admin/reset", async (c) => {
