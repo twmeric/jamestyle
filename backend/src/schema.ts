@@ -36,3 +36,43 @@ export const visitorEvents = sqliteTable("visitor_events", {
   durationMs: integer("duration_ms", { mode: "number" }),
   createdAt: integer("created_at", { mode: "number" }).default(sql`unixepoch()`).notNull(),
 });
+
+export const deviceMetrics = sqliteTable("device_metrics", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  sessionId: text("session_id").notNull(),
+  deviceType: text("device_type"),
+  screenWidth: integer("screen_width", { mode: "number" }),
+  screenHeight: integer("screen_height", { mode: "number" }),
+  devicePixelRatio: integer("device_pixel_ratio", { mode: "number" }),
+  orientation: text("orientation"),
+  os: text("os"),
+  browser: text("browser"),
+  fcpMs: integer("fcp_ms", { mode: "number" }),
+  connectionType: text("connection_type"),
+  language: text("language"),
+  timezone: text("timezone"),
+  memoryGb: integer("memory_gb", { mode: "number" }),
+  touchLatencyMs: integer("touch_latency_ms", { mode: "number" }),
+  maxTouchPoints: integer("max_touch_points", { mode: "number" }),
+  createdAt: integer("created_at", { mode: "number" }).default(sql`unixepoch()`).notNull(),
+});
+
+export const cardShares = sqliteTable("card_shares", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  sessionId: text("session_id"),
+  slideId: integer("slide_id", { mode: "number" }).notNull(),
+  shareToken: text("share_token").notNull().unique(),
+  status: text("status").default("pending"),
+  sharedAt: integer("shared_at", { mode: "number" }),
+  createdAt: integer("created_at", { mode: "number" }).default(sql`unixepoch()`).notNull(),
+});
+
+export const whatsappLeads = sqliteTable("whatsapp_leads", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  phone: text("phone").notNull().unique(),
+  firstContactAt: integer("first_contact_at", { mode: "number" }).default(sql`unixepoch()`).notNull(),
+  source: text("source").default("card_share"),
+  shareCount: integer("share_count", { mode: "number" }).default(1),
+  lastShareAt: integer("last_share_at", { mode: "number" }),
+  conversationHistory: text("conversation_history"),
+});

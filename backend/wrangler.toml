@@ -9,5 +9,16 @@ binding = "DB"
 database_name = "jamestyle-db"
 database_id = "f6ef5dda-f7e0-4a50-8eb2-0473a0571dae"
 
+# R2 Bucket for pre-generated quote cards
+[[r2_buckets]]
+binding = "CARD_IMAGES"
+bucket_name = "jamestyle-cards"
+
 [vars]
 RESET_TOKEN = "jamesstyle-reset-2025"
+
+# Secrets (set via `wrangler secret put`):
+# CLOUDWAPI_KEY = "your-cloudwapi-key"
+# CLOUDWAPI_SENDER = "8526XXXXXXXX"
+# ADMIN_WHATSAPP = "8526XXXXXXXX"
+# WEBHOOK_TOKEN = "your-webhook-verification-token"

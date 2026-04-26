@@ -1,0 +1,96 @@
+name: Deploy JameStyle
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Deployment reason'
+        required: false
+        default: 'Manual deployment'
+
+env:
+  NODE_VERSION: '22'
+  PNPM_VERSION: '10'
+
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  # ============================================================
+  # JOB 1: Build & Deploy Frontend (Cloudflare Pages)
+  # ============================================================
+  deploy-pages:
+    name: Deploy Pages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+          cache-dependency-path: '.build_src/pnpm-lock.yaml'
+
+      - name: Install frontend dependencies
+        working-directory: ./.build_src
+        run: pnpm install --frozen-lockfile
+
+      - name: Build frontend
+        working-directory: ./.build_src
+        run: pnpm run build
+
+      - name: Copy to deploy directory
+        run: |
+          mkdir -p .deploy_tmp
+          cp -r .build_src/dist/* .deploy_tmp/
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: jamestyle
+          directory: .deploy_tmp
+          branch: main
+
+  # ============================================================
+  # JOB 2: Deploy Backend Worker
+  # ============================================================
+  deploy-worker:
+    name: Deploy Worker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+          cache-dependency-path: 'backend/pnpm-lock.yaml'
+
+      - name: Install worker dependencies
+        working-directory: ./backend
+        run: pnpm install --frozen-lockfile
+
+      - name: Deploy Worker
+        working-directory: ./backend
+        run: pnpm exec wrangler deploy --config=wrangler.toml
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
