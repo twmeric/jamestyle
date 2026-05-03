@@ -301,19 +301,34 @@ export default function CardGallery() {
   const userReactions = reactions[slide.id] || [];
   const slideCounts = backendCounts[slide.id] || {};
 
-  return (
-    <div className="fixed inset-0 flex flex-col bg-james-dark" ref={containerRef}>
-      {/* Torn Paper SVG Filter */}
-      <svg className="absolute w-0 h-0" aria-hidden="true">
-        <defs>
-          <filter id="torn-paper-filter" x="-5%" y="-5%" width="110%" height="110%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="3" result="noise" />
-            <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" />
-          </filter>
-        </defs>
-      </svg>
+  const BG_IMAGES = [
+    '/images/bg_act0.jpg',
+    '/images/bg_act1.jpg',
+    '/images/bg_act2.jpg',
+    '/images/bg_act3.jpg',
+  ];
 
-      {/* Hermès Top Bar */}
+  return (
+    <div className="fixed inset-0 flex flex-col" ref={containerRef}>
+      {/* Act-specific Gallery Background */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={slide.act}
+          className="absolute inset-0 z-0"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <img
+            src={BG_IMAGES[slide.act]}
+            alt=""
+            className="w-full h-full object-cover"
+          />
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Gallery Top Bar */}
       <div className="relative z-20 px-5 pt-[env(safe-area-inset-top,8px)] pb-1">
         <div className="flex items-center justify-between mt-2 mb-2">
           <motion.div
