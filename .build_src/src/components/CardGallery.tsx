@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo, type Tr
 import { SLIDES, ACT_NAMES, ACT_EMOJIS } from '../data/slides';
 import { useAppStore } from '../store/appStore';
 import { trackEvent, trackEventImmediate } from '../api/reactionsApi';
-import { playPageTurn, playReaction } from '../utils/soundManager';
+import { playReaction } from '../utils/soundManager';
 import { unlockAchievement } from '../utils/achievements';
 
 // ===== Multiple Transition Styles for Surprise & Delight =====
@@ -88,7 +88,26 @@ const IMG_TRANSITIONS = [
 const REACTION_TYPES = [
   { key: 'heart', emoji: '❤️', label: '紅心' },
   { key: 'like', emoji: '👍', label: 'Like' },
-  { key: 'share', emoji: '📤', label: '分享' },
+];
+
+// ===== Gallery Frame Styles by Act — 4 distinct museum frame aesthetics =====
+const FRAME_CLASSES = [
+  /* 0: 扎心共鳴 — Bold Modern Black */
+  'border-[#1a1a1a] border-[5px] rounded-none shadow-[4px_4px_0_0_#1a1a1a,8px_8px_20px_rgba(0,0,0,0.12)]',
+  /* 1: 溫柔療癒 — Warm Wood */
+  'border-[#A67C52] border-[6px] rounded-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.3),3px_3px_0_0_#8B6239,6px_6px_24px_rgba(139,98,57,0.15)]',
+  /* 2: 人生態度 — Fine Metallic Gold */
+  'border-[#C4956A] border-[1.5px] rounded-sm shadow-[0_0_0_3px_#F5F2ED,0_0_0_4.5px_#C4956A,0_12px_32px_rgba(196,149,106,0.15)]',
+  /* 3: 品牌個性 — Double-layer Shadow Box */
+  'border-[#2a2a2a] border-[3px] rounded-none shadow-[inset_0_2px_8px_rgba(0,0,0,0.06),4px_4px_0_0_#fff,5px_5px_0_0_#2a2a2a,10px_10px_30px_rgba(0,0,0,0.1)]',
+];
+
+// Frame inner matte color per act
+const MATTE_CLASSES = [
+  'bg-white',
+  'bg-[#FDFBF7]',
+  'bg-white',
+  'bg-[#FAFAFA]',
 ];
 
 const AUTOPLAY_INTERVAL = 5000;
@@ -100,7 +119,7 @@ function formatCount(n: number): string {
 }
 
 export default function CardGallery() {
-  const { lang, currentSlide, setCurrentSlide, favorites, toggleFavorite, reactions, backendCounts, submitReaction, loadReactions, setShowShareModal, setShareSlideId, setPhase, isAutoPlaying, setIsAutoPlaying, trackSlideChange, trackInsight, trackShare, emotionVotes, submitEmotionVote } = useAppStore();
+  const { lang, currentSlide, setCurrentSlide, reactions, backendCounts, submitReaction, loadReactions, setPhase, isAutoPlaying, setIsAutoPlaying, trackSlideChange, trackInsight, trackShare, emotionVotes, submitEmotionVote } = useAppStore();
   const [showInsight, setShowInsight] = useState<number | null>(null);
   const [floatingEmojis, setFloatingEmojis] = useState<{ id: number; emoji: string; x: number }[]>([]);
   const [autoplayKey, setAutoplayKey] = useState(0);
@@ -143,7 +162,6 @@ export default function CardGallery() {
       const nextIdx = currentSlide + 1;
       setCurrentSlide(nextIdx);
       trackSlideChange(nextIdx, SLIDES[nextIdx].id);
-      playPageTurn();
       if (nextIdx === SLIDES.length - 1) {
         hasReachedEndRef.current = true;
         unlockAchievement('gallery_complete');
@@ -166,7 +184,6 @@ export default function CardGallery() {
       const prevIdx = currentSlide - 1;
       setCurrentSlide(prevIdx);
       trackSlideChange(prevIdx, SLIDES[prevIdx].id);
-      playPageTurn();
       if (prevIdx === 0 && hasReachedEndRef.current) {
         unlockAchievement('return_visitor');
       }
@@ -202,7 +219,6 @@ export default function CardGallery() {
         fromSlide: currentSlide,
         toSlide: direction === 'next' ? currentSlide + 1 : currentSlide - 1,
       });
-      playPageTurn();
       if (direction === 'next') goNext();
       else goPrev();
     }
@@ -270,12 +286,6 @@ export default function CardGallery() {
     if (navigator.vibrate) navigator.vibrate(20);
   };
 
-  const handleShare = (slideId: number) => {
-    setShareSlideId(slideId);
-    setShowShareModal(true);
-    trackShare(slideId, 'open');
-  };
-
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight') goNext();
@@ -309,7 +319,7 @@ export default function CardGallery() {
   ];
 
   return (
-    <div className="fixed inset-0 flex flex-col" ref={containerRef}>
+    <div className="min-h-[100dvh] w-full flex flex-col relative" ref={containerRef}>
       {/* Act-specific Gallery Background */}
       <AnimatePresence mode="wait">
         <motion.div
@@ -329,27 +339,27 @@ export default function CardGallery() {
       </AnimatePresence>
 
       {/* Gallery Top Bar */}
-      <div className="relative z-20 px-5 pt-[env(safe-area-inset-top,8px)] pb-1">
-        <div className="flex items-center justify-between mt-2 mb-2">
+      <div className="relative z-20 px-4 sm:px-5 pt-[env(safe-area-inset-top,6px)] pb-1 shrink-0">
+        <div className="flex items-center justify-between mt-1.5 sm:mt-2 mb-1.5 sm:mb-2">
           <motion.div
             key={actName}
             initial={{ x: -15, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            className="flex items-center gap-3"
+            className="flex items-center gap-2 sm:gap-3"
           >
-            <span className="text-lg">{actEmoji}</span>
-            <span className="text-sm text-warm-gold/70 tracking-[4px] uppercase px-4 py-1.5 hermes-border rounded-none">
+            <span className="text-base sm:text-lg">{actEmoji}</span>
+            <span className="text-xs sm:text-sm text-[#C4956A] tracking-[3px] sm:tracking-[4px] uppercase px-2.5 sm:px-4 py-1 sm:py-1.5 border border-[#C4956A]/30 rounded-none">
               {actName}
             </span>
           </motion.div>
-          <span className="text-xs text-warm-light/30 tracking-[3px] font-mono">
-            {String(currentSlide + 1).padStart(2, '0')} — {SLIDES.length}
+          <span className="hidden sm:inline text-xs text-gray-400 tracking-[3px] font-mono">
+            {String(currentSlide + 1).padStart(2, '0')} / {SLIDES.length}
           </span>
         </div>
         {/* Elegant Progress Line */}
-        <div className="h-[0.5px] bg-white/[0.04] overflow-hidden">
+        <div className="h-[0.5px] bg-black/[0.06] overflow-hidden">
           <motion.div
-            className="h-full bg-gradient-to-r from-james-orange/60 to-warm-gold/40"
+            className="h-full bg-gradient-to-r from-[#E8621A]/60 to-[#C4956A]/40"
             animate={{ width: `${progress}%` }}
             transition={{ type: 'spring', stiffness: 80, damping: 25 }}
           />
@@ -357,7 +367,7 @@ export default function CardGallery() {
       </div>
 
       {/* Card Area */}
-      <div className="flex-1 flex items-center justify-center px-3 py-1 relative overflow-hidden perspective-container">
+      <div className="flex-1 flex items-center justify-center px-2 sm:px-3 py-0.5 sm:py-1 relative z-10 perspective-container">
         {/* Floating reaction emojis */}
         <AnimatePresence>
           {floatingEmojis.map(e => (
@@ -389,56 +399,36 @@ export default function CardGallery() {
             exit={transitionVariant.exit}
             transition={transitionVariant.transition}
           >
-            <div className="bg-cream rounded-2xl card-shadow overflow-hidden relative torn-paper">
-              {/* Hermès-style thin gold line at top */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-[0.5px] bg-gradient-to-r from-transparent via-warm-gold/30 to-transparent z-10" />
-
+            <div className={`overflow-hidden ${FRAME_CLASSES[slide.act]} ${MATTE_CLASSES[slide.act]}`}>
               {/* Image */}
-              <div className="relative bg-gradient-to-b from-[#F7F3EE] to-[#F0EBE3] aspect-[4/3.5] flex items-center justify-center overflow-hidden">
+              <div className={`relative aspect-[4/3.5] flex items-center justify-center overflow-hidden ${MATTE_CLASSES[slide.act]}`}>
                 <motion.img
                   key={slide.img}
                   src={slide.img}
                   alt={`作品 ${slide.id}`}
-                  className="w-full h-full object-contain p-5"
+                  className="w-full h-full object-contain p-4 sm:p-5"
                   initial={imgVariant.initial}
                   animate={imgVariant.animate}
                   transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
                 />
 
-                {/* Favorite button */}
-                <motion.button
-                  className="absolute top-5 right-5 w-9 h-9 rounded-full bg-black/15 backdrop-blur-md flex items-center justify-center z-10"
-                  whileTap={{ scale: 0.85 }}
-                  onClick={() => {
-                    trackEvent('favorite_toggle', slide.id, {
-                      action: favorites.includes(slide.id) ? 'remove' : 'add',
-                      totalFavorites: favorites.length + (favorites.includes(slide.id) ? -1 : 1),
-                    });
-                    toggleFavorite(slide.id);
-                  }}
-                >
-                  <span className={`text-lg ${favorites.includes(slide.id) ? '' : 'grayscale opacity-50'}`}>
-                    {favorites.includes(slide.id) ? '❤️' : '🤍'}
-                  </span>
-                </motion.button>
-
                 {/* Insight overlay */}
                 <AnimatePresence>
                   {showInsight === slide.id && (
                     <motion.div
-                      className="absolute inset-0 insight-glass flex items-center justify-center p-10 z-20"
+                      className="absolute inset-0 bg-[#F5F2ED]/95 backdrop-blur-sm flex items-center justify-center p-6 sm:p-10 z-20"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       onClick={() => setShowInsight(null)}
                     >
                       <div className="text-center">
-                        <div className="hermes-divider mb-5" />
-                        <p className="text-[10px] text-warm-gold/60 tracking-[6px] mb-5 uppercase">{lang === 'sc' ? '解 画' : '解 畫'}</p>
-                        <p className="text-lg leading-[2] text-cream/85 tracking-wide">
+                        <div className="w-8 h-[1px] bg-[#C4956A]/40 mx-auto mb-5" />
+                        <p className="text-[10px] text-[#C4956A]/70 tracking-[6px] mb-5 uppercase">{lang === 'sc' ? '解 画' : '解 畫'}</p>
+                        <p className="text-base sm:text-lg leading-[2] text-[#4A4A4A]/85 tracking-wide">
                           {slide.insight[lang]}
                         </p>
-                        <div className="hermes-divider mt-6" />
+                        <div className="w-8 h-[1px] bg-[#C4956A]/40 mx-auto mt-6" />
                       </div>
                     </motion.div>
                   )}
@@ -446,9 +436,9 @@ export default function CardGallery() {
               </div>
 
               {/* Insight button */}
-              <div className="flex justify-center -mt-5 relative z-30">
+              <div className="flex justify-center -mt-4 sm:-mt-5 relative z-30">
                 <motion.button
-                  className="px-10 py-3 bg-james-orange text-white text-sm tracking-[3px] uppercase rounded-full shadow-lg shadow-james-orange/20 relative overflow-hidden"
+                  className="px-8 sm:px-10 py-2.5 sm:py-3 bg-[#E8621A] text-white text-xs sm:text-sm tracking-[3px] uppercase rounded-full shadow-lg shadow-[#E8621A]/20 relative overflow-hidden"
                   whileTap={{ scale: 0.95 }}
                   onClick={() => {
                     const isOpening = showInsight !== slide.id;
@@ -470,18 +460,25 @@ export default function CardGallery() {
               </div>
 
               {/* Caption */}
-              <div className="px-7 pt-5 pb-6">
-                <p className="text-lg md:text-xl leading-[2] text-[#5A5248] text-center tracking-wide">
+              <div className="px-5 sm:px-7 pt-4 sm:pt-5 pb-3 sm:pb-4">
+                <p className="text-base sm:text-lg md:text-xl leading-[2] text-[#5A5248] text-center tracking-wide">
                   {slide.caption[lang]}
                 </p>
+              </div>
+
+              {/* Exhibition Plaque — artwork title */}
+              <div className="text-center pb-4 sm:pb-5">
+                <span className="text-[10px] sm:text-xs text-[#E8621A] font-bold tracking-[2px] sm:tracking-[3px]">
+                  № {String(slide.id).padStart(2, '0')} · {slide.title[lang]} · 2026
+                </span>
               </div>
             </div>
 
             {/* Emotion Spectrum Vote */}
             <EmotionVoteBar slideId={slide.id} lang={lang} />
 
-            {/* Reactions Bar — 3 emojis: ❤️ 紅心, 👍 Like, 📤 分享 */}
-            <div className="flex items-center justify-center gap-3 mt-4 flex-wrap">
+            {/* Reactions Bar — 2 emojis: ❤️ 紅心, 👍 Like */}
+            <div className="flex items-center justify-center gap-3 mt-3 sm:mt-4 flex-wrap">
               {REACTION_TYPES.map(r => {
                 // Base count (seed data) + real DB count = total display
                 const baseCount = slide.reactions[r.key as keyof typeof slide.reactions] || 0;
@@ -491,23 +488,15 @@ export default function CardGallery() {
                 const pendingClicks = dbCount > 0 ? 0 : userCount; // once server responds, dbCount includes our clicks
                 const displayCount = baseCount + dbCount + pendingClicks;
                 const isActive = userCount > 0;
-                const isShareType = r.key === 'share';
                 return (
                   <motion.button
                     key={r.key}
-                    className={`reaction-btn ${isActive ? 'active' : ''}`}
-                    style={isShareType ? { background: 'rgba(232, 98, 26, 0.06)', borderColor: 'rgba(232, 98, 26, 0.15)' } : undefined}
+                    className={`reaction-btn-light ${isActive ? 'active' : ''}`}
                     whileTap={{ scale: 0.9 }}
-                    onClick={() => {
-                      handleReaction(slide.id, r.key, r.emoji);
-                      // Also open share modal for share reaction
-                      if (isShareType) {
-                        handleShare(slide.id);
-                      }
-                    }}
+                    onClick={() => handleReaction(slide.id, r.key, r.emoji)}
                   >
                     <span className="text-lg">{r.emoji}</span>
-                    <span className={`text-xs ${isShareType ? 'text-james-orange/60' : 'opacity-50'}`}>
+                    <span className="text-xs opacity-50">
                       {formatCount(displayCount)}
                     </span>
                   </motion.button>
@@ -518,32 +507,30 @@ export default function CardGallery() {
         </AnimatePresence>
       </div>
 
-      {/* Hermès Bottom Controls */}
-      <div className="relative z-20 px-6 pb-[env(safe-area-inset-bottom,12px)] pt-1">
+      {/* Bottom Controls */}
+      <div className="relative z-20 px-4 sm:px-6 pb-[env(safe-area-inset-bottom,12px)] pt-1 shrink-0">
         {/* Thin separator */}
-        <div className="hermes-divider mb-3" style={{ width: '100%', background: 'rgba(255,255,255,0.03)' }} />
+        <div className="w-full h-[1px] bg-black/[0.06] mb-3" />
 
-        <div className="flex items-center justify-center gap-5">
+        <div className="flex items-center justify-center gap-4 sm:gap-5">
           {/* Prev button */}
           <motion.button
-            className="w-13 h-13 rounded-full flex items-center justify-center text-white bg-james-orange/80 border border-james-orange/30 shadow-md shadow-james-orange/15 transition-all duration-300 hover:bg-james-orange"
+            className="w-11 h-11 sm:w-13 sm:h-13 rounded-full flex items-center justify-center text-white bg-[#E8621A]/80 border border-[#E8621A]/30 shadow-md shadow-[#E8621A]/15 transition-all duration-300 hover:bg-[#E8621A]"
             whileTap={{ scale: 0.9 }}
             onClick={goPrev}
-            style={{ opacity: currentSlide > 0 ? 1 : 0.25, width: '52px', height: '52px' }}
+            style={{ opacity: currentSlide > 0 ? 1 : 0.25 }}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
             </svg>
           </motion.button>
 
           {/* Autoplay button */}
           <motion.button
-            className="relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300"
+            className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all duration-300"
             style={{
-              background: isAutoPlaying ? 'rgba(232, 98, 26, 0.15)' : 'rgba(232, 98, 26, 0.06)',
-              border: `1.5px solid ${isAutoPlaying ? 'rgba(232, 98, 26, 0.5)' : 'rgba(232, 98, 26, 0.2)'}`,
-              width: '56px',
-              height: '56px',
+              background: isAutoPlaying ? 'rgba(232, 98, 26, 0.12)' : 'rgba(232, 98, 26, 0.05)',
+              border: `1.5px solid ${isAutoPlaying ? 'rgba(232, 98, 26, 0.4)' : 'rgba(232, 98, 26, 0.15)'}`,
             }}
             whileTap={{ scale: 0.9 }}
             onClick={toggleAutoPlay}
@@ -564,12 +551,12 @@ export default function CardGallery() {
               </svg>
             )}
             {isAutoPlaying ? (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-james-orange/70">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#E8621A]/70">
                 <rect x="6" y="4" width="4" height="16" rx="1" />
                 <rect x="14" y="4" width="4" height="16" rx="1" />
               </svg>
             ) : (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-warm-light/40 ml-0.5">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-gray-400 ml-0.5">
                 <path d="M8 5v14l11-7z" />
               </svg>
             )}
@@ -577,22 +564,21 @@ export default function CardGallery() {
 
           {/* Next button */}
           <motion.button
-            className="w-13 h-13 rounded-full flex items-center justify-center text-white bg-james-orange/80 border border-james-orange/30 shadow-md shadow-james-orange/15 transition-all duration-300 hover:bg-james-orange"
+            className="w-11 h-11 sm:w-13 sm:h-13 rounded-full flex items-center justify-center text-white bg-[#E8621A]/80 border border-[#E8621A]/30 shadow-md shadow-[#E8621A]/15 transition-all duration-300 hover:bg-[#E8621A]"
             whileTap={{ scale: 0.9 }}
             onClick={goNext}
-            style={{ opacity: currentSlide < SLIDES.length - 1 ? 1 : 0.25, width: '52px', height: '52px' }}
+            style={{ opacity: currentSlide < SLIDES.length - 1 ? 1 : 0.25 }}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
             </svg>
           </motion.button>
         </div>
 
-        {/* Quiz shortcut at midpoint */}
         {/* Swipe hint */}
         {currentSlide === 0 && (
           <motion.p
-            className="text-center text-[10px] text-warm-light/20 mt-2 tracking-[4px]"
+            className="text-center text-[10px] text-gray-400/50 mt-2 tracking-[4px]"
             initial={{ opacity: 0 }}
             animate={{ opacity: [0, 0.4, 0] }}
             transition={{ duration: 3, delay: 2, repeat: 2 }}
@@ -626,24 +612,24 @@ function EmotionVoteBar({ slideId, lang }: { slideId: number; lang: 'tc' | 'sc' 
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="flex items-center justify-center gap-2 text-xs text-cream/50"
+          className="flex items-center justify-center gap-2 text-xs text-gray-400"
         >
           <span>✨</span>
           <span>{t('你已感受這張作品', '你已感受这张作品')}：</span>
-          <span className="text-warm-gold">
+          <span className="text-[#C4956A]">
             {EMOTION_OPTIONS.find((e) => e.key === votedEmotion)?.emoji}
             {EMOTION_OPTIONS.find((e) => e.key === votedEmotion)?.label[lang === 'sc' ? 1 : 0]}
           </span>
         </motion.div>
       ) : (
         <div className="flex flex-col items-center gap-2">
-          <span className="text-[10px] text-cream/40 tracking-[2px]">{t('這張作品讓你感覺？', '这张作品让你感觉？')}</span>
+          <span className="text-[10px] text-gray-400 tracking-[2px]">{t('這張作品讓你感覺？', '这张作品让你感觉？')}</span>
           <div className="flex items-center gap-2">
             {EMOTION_OPTIONS.map((opt) => (
               <motion.button
                 key={opt.key}
                 className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs border transition-all duration-300 ${
-                  'bg-white/5 border-white/10 text-cream/60 hover:bg-white/10 hover:border-white/20'
+                  'bg-black/[0.03] border-black/[0.08] text-gray-500 hover:bg-black/[0.06] hover:border-black/[0.12]'
                 }`}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => submitEmotionVote(slideId, opt.key)}
