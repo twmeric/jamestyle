@@ -348,13 +348,11 @@ export default function CardGallery() {
             className="flex items-center gap-2 sm:gap-3"
           >
             <span className="text-base sm:text-lg">{actEmoji}</span>
-            <span className="text-xs sm:text-sm text-[#C4956A] tracking-[3px] sm:tracking-[4px] uppercase px-2.5 sm:px-4 py-1 sm:py-1.5 border border-[#C4956A]/30 rounded-none">
+            <span className="text-xs sm:text-sm text-[#5A5248] tracking-[3px] sm:tracking-[4px] uppercase px-2.5 sm:px-4 py-1 sm:py-1.5 border border-[#5A5248]/30 rounded-none">
               {actName}
             </span>
           </motion.div>
-          <span className="hidden sm:inline text-xs text-gray-400 tracking-[3px] font-mono">
-            {String(currentSlide + 1).padStart(2, '0')} / {SLIDES.length}
-          </span>
+
         </div>
         {/* Elegant Progress Line */}
         <div className="h-[0.5px] bg-black/[0.06] overflow-hidden">
@@ -468,8 +466,8 @@ export default function CardGallery() {
 
               {/* Exhibition Plaque — artwork title */}
               <div className="text-center pb-4 sm:pb-5">
-                <span className="text-[10px] sm:text-xs text-[#E8621A] font-bold tracking-[2px] sm:tracking-[3px]">
-                  № {String(slide.id).padStart(2, '0')} · {slide.title[lang]} · 2026
+                <span className="text-xs sm:text-sm text-[#E8621A] font-bold tracking-[2px] sm:tracking-[3px]">
+                  【{slide.title[lang]}】
                 </span>
               </div>
             </div>
@@ -515,7 +513,7 @@ export default function CardGallery() {
         <div className="flex items-center justify-center gap-4 sm:gap-5">
           {/* Prev button */}
           <motion.button
-            className="w-11 h-11 sm:w-13 sm:h-13 rounded-full flex items-center justify-center text-white bg-[#E8621A]/80 border border-[#E8621A]/30 shadow-md shadow-[#E8621A]/15 transition-all duration-300 hover:bg-[#E8621A]"
+            className="w-11 h-11 sm:w-13 sm:h-13 rounded-full flex items-center justify-center text-white bg-[#2a2a2a]/90 border border-[#2a2a2a]/30 shadow-md shadow-black/15 transition-all duration-300 hover:bg-[#1a1a1a]"
             whileTap={{ scale: 0.9 }}
             onClick={goPrev}
             style={{ opacity: currentSlide > 0 ? 1 : 0.25 }}
@@ -529,8 +527,8 @@ export default function CardGallery() {
           <motion.button
             className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all duration-300"
             style={{
-              background: isAutoPlaying ? 'rgba(232, 98, 26, 0.12)' : 'rgba(232, 98, 26, 0.05)',
-              border: `1.5px solid ${isAutoPlaying ? 'rgba(232, 98, 26, 0.4)' : 'rgba(232, 98, 26, 0.15)'}`,
+              background: isAutoPlaying ? 'rgba(42, 42, 42, 0.15)' : 'rgba(42, 42, 42, 0.06)',
+              border: `1.5px solid ${isAutoPlaying ? 'rgba(42, 42, 42, 0.5)' : 'rgba(42, 42, 42, 0.2)'}`,
             }}
             whileTap={{ scale: 0.9 }}
             onClick={toggleAutoPlay}
@@ -542,7 +540,7 @@ export default function CardGallery() {
                   key={autoplayKey}
                   cx="24" cy="24" r="18"
                   fill="none"
-                  stroke="rgba(232, 98, 26, 0.4)"
+                  stroke="rgba(42, 42, 42, 0.4)"
                   strokeWidth="0.8"
                   strokeDasharray="113"
                   strokeDashoffset="113"
@@ -551,12 +549,12 @@ export default function CardGallery() {
               </svg>
             )}
             {isAutoPlaying ? (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#E8621A]/70">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#2a2a2a]/70">
                 <rect x="6" y="4" width="4" height="16" rx="1" />
                 <rect x="14" y="4" width="4" height="16" rx="1" />
               </svg>
             ) : (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-gray-400 ml-0.5">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-[#2a2a2a]/60 ml-0.5">
                 <path d="M8 5v14l11-7z" />
               </svg>
             )}
@@ -564,7 +562,7 @@ export default function CardGallery() {
 
           {/* Next button */}
           <motion.button
-            className="w-11 h-11 sm:w-13 sm:h-13 rounded-full flex items-center justify-center text-white bg-[#E8621A]/80 border border-[#E8621A]/30 shadow-md shadow-[#E8621A]/15 transition-all duration-300 hover:bg-[#E8621A]"
+            className="w-11 h-11 sm:w-13 sm:h-13 rounded-full flex items-center justify-center text-white bg-[#2a2a2a]/90 border border-[#2a2a2a]/30 shadow-md shadow-black/15 transition-all duration-300 hover:bg-[#1a1a1a]"
             whileTap={{ scale: 0.9 }}
             onClick={goNext}
             style={{ opacity: currentSlide < SLIDES.length - 1 ? 1 : 0.25 }}
