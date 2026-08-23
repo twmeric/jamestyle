@@ -1,0 +1,245 @@
+{
+  "gallery": [
+    {
+      "code": "9fz0",
+      "id": 1,
+      "title": "直播人生",
+      "caption": "人生沒有綵排，每天都是直播！",
+      "insight": "阿占用「直播」呢個Z世代最熟悉嘅詞，講緊我哋冇得彩排、冇得剪輯，每一秒都係真實放送。唔好再驚醜，因為觀眾根本冇你以為咁多。",
+      "image": "gallery-images/9fz0.jpeg"
+    },
+    {
+      "code": "7xc7",
+      "id": 2,
+      "title": "夢與行動",
+      "caption": "你可以躺著做一個夢，或是起來完成它！",
+      "insight": "躺平係一種權利，但起身係一種選擇。阿占唔批判任何一種，只係提醒你：發夢同追夢，其實可以共存。",
+      "image": "gallery-images/7xc7.jpeg"
+    },
+    {
+      "code": "qt2b",
+      "id": 3,
+      "title": "四境自處",
+      "caption": "在繁華中自律，在低谷中自勵，在傷痛中自癒，在塵埃中自強！",
+      "insight": "繁華、低谷、傷痛、塵埃——人生四境。阿占教我哋唔係逃避，係喺每一個境界裡面找到自己嘅位置。自律係愛自己，自癒係放過自己。",
+      "image": "gallery-images/qt2b.jpeg"
+    },
+    {
+      "code": "s3jl",
+      "id": 4,
+      "title": "乘風破浪",
+      "caption": "如果無法一帆風順，那就努力乘風破浪！",
+      "insight": "唔係每個人都有順風船。阿占想講：無風嘅時候，你就係自己嘅風。",
+      "image": "gallery-images/s3jl.jpeg"
+    },
+    {
+      "code": "6lbc",
+      "id": 5,
+      "title": "困難包裝",
+      "caption": "上天在送你一份大禮物時，都會用重重困難來包裝！",
+      "insight": "老天爺送禮物從來唔用絲帶，係用逆境做包裝紙。拆開先知道裡面係咩。",
+      "image": "gallery-images/6lbc.jpeg"
+    },
+    {
+      "code": "kcg9",
+      "id": 6,
+      "title": "接受大便",
+      "caption": "人生就是夾雜苦澀與甜美，有時很糟糕但又很值得紀念，你就是要學會接受這些大便！",
+      "insight": "阿占用最粗俗嘅比喻講最深嘅道理：人生唔係淨係玫瑰，仲有大便。學識接受，先係真正嘅成熟。",
+      "image": "gallery-images/kcg9.jpeg"
+    },
+    {
+      "code": "7otv",
+      "id": 7,
+      "title": "真朋友",
+      "caption": "真正的朋友絕不在乎你成不成功厲不厲害，只在乎何時出來一齊食飯！",
+      "insight": "成功係 Instagram 嘅，朋友係 WhatsApp 嘅。阿占拆穿社交媒體嘅虛假，提醒我哋：真感情唔需要濾鏡。",
+      "image": "gallery-images/7otv.jpeg"
+    },
+    {
+      "code": "k14q",
+      "id": 8,
+      "title": "無所謂",
+      "caption": "壞消息是你沒辦法讓所有人喜歡你，理解你，接受你，好消息是這都無所謂！",
+      "insight": "壞消息係你控制唔到全世界，好消息係你根本唔使。阿占教我哋把「被人鍾意」嘅執念放低，先活得自在。",
+      "image": "gallery-images/k14q.jpeg"
+    },
+    {
+      "code": "zrkm",
+      "id": 9,
+      "title": "無遺憾",
+      "caption": "如果你年輕時只顧吃喝玩樂，等你老了你就會發現，你的人生基本上已經沒有遺憾了！",
+      "insight": "顛覆「少壯不努力」嘅傳統教訓。阿占用反話講：如果你真係盡情活過，咁就冇遺憾——唔係成就嘅問題，係投入嘅問題。",
+      "image": "gallery-images/zrkm.jpeg"
+    },
+    {
+      "code": "zylg",
+      "id": 10,
+      "title": "夾硬嚟",
+      "caption": "世上無難事，只要夾硬嚟！",
+      "insight": "粵語「夾硬嚟」係貶義，但阿占翻轉佢：有時唔係能力問題，係夠唔夠膽問題。衝出去先係答案。",
+      "image": "gallery-images/zylg.jpeg"
+    },
+    {
+      "code": "m85a",
+      "id": 11,
+      "title": "停止鼓掌",
+      "caption": "人人都愛掌聲，但要學會當人們停止鼓掌時，仍然不放棄自己！",
+      "insight": "外在認同係毒品，上癮之後會唔識自己行路。阿占想講：掌聲停咗之後，你仍然要為自己拍掌。",
+      "image": "gallery-images/m85a.jpeg"
+    },
+    {
+      "code": "766w",
+      "id": 12,
+      "title": "舒適圈",
+      "caption": "希望大家都能走出舒適圈，讓我進去！",
+      "insight": "表面係懶，其實係智慧。阿占用反話講：如果個圈真係咁舒服，點解要走出嚟？有時候「唔走」都係一種選擇。",
+      "image": "gallery-images/766w.jpeg"
+    },
+    {
+      "code": "dmgs",
+      "id": 13,
+      "title": "天才真相",
+      "caption": "所謂天才，只不過是把別人喝咖啡的時間，都用在了工作上！",
+      "insight": "拆穿天才神話。阿占想講：你見到嘅光鮮，背後都係無數杯冷咗嘅咖啡。冇人天生勁，只有人肯捱。",
+      "image": "gallery-images/dmgs.jpeg"
+    },
+    {
+      "code": "sm4h",
+      "id": 14,
+      "title": "不在乎",
+      "caption": "我能百分之九十七的確定你不喜歡我，但我百分之百肯定我不在乎！",
+      "insight": "97% vs 100%，數學上唔合理，但情緒上好真實。阿占教我哋：被討厭嘅勇氣，來自自我肯定。",
+      "image": "gallery-images/sm4h.jpeg"
+    },
+    {
+      "code": "htgz",
+      "id": 15,
+      "title": "偷不走",
+      "caption": "有些東西是別人拿不走的，一是心裏的夢想，二是讀進腦內的書！",
+      "insight": "夢想同知識係唯一唔使交租、唔使報稅、冇人搶得走嘅資產。阿占用最簡單嘅話講財富自由嘅真相。",
+      "image": "gallery-images/htgz.jpeg"
+    },
+    {
+      "code": "u2zf",
+      "id": 16,
+      "title": "悠長假期",
+      "caption": "生命不必每分每秒都衝刺，低潮時，就當是放一個悠長假期！",
+      "insight": "香港人唔識停。阿占教我哋：低潮唔係懲罰，係強迫休假。有時候咩都唔做，就係最需要做嘅事。",
+      "image": "gallery-images/u2zf.jpeg"
+    },
+    {
+      "code": "rkyy",
+      "id": 17,
+      "title": "四季有空",
+      "caption": "想和你吃飯的人，酸甜苦辣都愛吃，想和你見面的人，春夏秋冬都有空！",
+      "insight": "阿占用飯局講緣份：真係想見你的人，唔會話「等我睇吓 schedule」。時間永遠係藉口，心意先係答案。",
+      "image": "gallery-images/rkyy.jpeg"
+    },
+    {
+      "code": "pkfx",
+      "id": 18,
+      "title": "胃口",
+      "caption": "即使一無所有，也不能沒有胃口！",
+      "insight": "一無所有嘅時候，至少仲識得食。阿占想講：只要仲有胃口，就代表你仲有求生欲——呢個就係希望。",
+      "image": "gallery-images/pkfx.jpeg"
+    },
+    {
+      "code": "qqmh",
+      "id": 19,
+      "title": "七秒記憶",
+      "caption": "希望我們能夠像金魚一樣，把所有不開心的事情，只保留七秒鐘的記憶！",
+      "insight": "金魚係福氣。阿占用科學謬誤講情緒智慧：唔係每件事都值得長期記住，遺忘係一種自我保護。",
+      "image": "gallery-images/qqmh.jpeg"
+    },
+    {
+      "code": "ik8n",
+      "id": 20,
+      "title": "放下",
+      "caption": "生命中有些問題，不是要你解決，而是要你放下！",
+      "insight": "問題分兩種：要解決嘅，同要放下嘅。阿占教我哋辨識：唔係所有戰場都值得留低。",
+      "image": "gallery-images/ik8n.jpeg"
+    },
+    {
+      "code": "1w96",
+      "id": 21,
+      "title": "開眼閉眼",
+      "caption": "學會隻眼開隻眼閉，你可以輕鬆面對身處高峰或谷底！",
+      "insight": "選擇性專注係最高級嘅情緒管理。阿占想講：睇清邊啲值得睇，其他當睇唔到——呢個唔係逃避，係策略。",
+      "image": "gallery-images/1w96.jpeg"
+    },
+    {
+      "code": "yf67",
+      "id": 22,
+      "title": "前度活該",
+      "caption": "皇帝死了叫駕崩，和尚死了叫圓寂，前度死了叫活該！",
+      "insight": "用最幽默嘅方式處理最痛嘅傷口。阿占想講：前度已死，有事燒紙。放下唔係原諒，係懶得理。",
+      "image": "gallery-images/yf67.jpeg"
+    },
+    {
+      "code": "dqmk",
+      "id": 23,
+      "title": "今朝醉",
+      "caption": "今朝有酒今朝醉，明天更肥明天愁！",
+      "insight": "及時行樂嘅哲學。阿占唔係鼓吹墮落，係提醒：今日嘅快樂唔好推到聽日，因為聽日可能更肥。",
+      "image": "gallery-images/dqmk.jpeg"
+    },
+    {
+      "code": "ycr5",
+      "id": 24,
+      "title": "夠飽",
+      "caption": "愛你的人不會介意你肥不肥，只會擔心你夠不夠飽！",
+      "insight": "愛嘅最高境界唔係「你幾靚」，係「你食飽未」。阿占用食飯講愛：真正嘅關心，從來都係咁樸素。",
+      "image": "gallery-images/ycr5.jpeg"
+    },
+    {
+      "code": "wcfb",
+      "id": 25,
+      "title": "品德湯底",
+      "caption": "一個人的品德，跟火鍋的湯底一樣，非常十分的重要！",
+      "insight": "火鍋嘅靈魂係湯底，人嘅靈魂係品德。阿占用香港人最熟嘅食物做比喻：表面堆砌得幾靚，湯底一壞就全軍覆沒。",
+      "image": "gallery-images/wcfb.jpeg"
+    },
+    {
+      "code": "iz6t",
+      "id": 26,
+      "title": "裝可愛",
+      "caption": "阿占忠告各位：為免做成大家尷尬，緊記可愛的人才適合裝可愛！",
+      "insight": "阿占講緊「真實」嘅重要性。可愛唔係裝出嚟嘅，係自然流露嘅。強行可愛，最終只會變成尷尬。",
+      "image": "gallery-images/iz6t.jpeg"
+    },
+    {
+      "code": "jygn",
+      "id": 27,
+      "title": "工作悖論",
+      "caption": "人生最痛苦的兩件事：工作和沒工作！",
+      "insight": "有工做好煩，冇工做好驚。阿占用 paradox 講打工仔嘅宿命：無論邊一邊，都係痛苦。但識得笑，就係解藥。",
+      "image": "gallery-images/jygn.jpeg"
+    },
+    {
+      "code": "zrrl",
+      "id": 28,
+      "title": "一萬次",
+      "caption": "可怕的不是練出一萬招的敵人，而是一招練一萬次的對手！",
+      "insight": "數量唔係重點，深度先係。阿占想講：專精一招勝過淺嘗萬招。職場、愛情、興趣都一樣。",
+      "image": "gallery-images/zrrl.jpeg"
+    },
+    {
+      "code": "nuyy",
+      "id": 29,
+      "title": "燒味飯",
+      "caption": "愛情同燒味飯一樣，全部都係整定！",
+      "insight": "愛情同燒味飯都係「整定」——有時你揀唔到邊款，但每一款都有佢嘅好。阿占用最市井嘅食物講最玄妙嘅緣份。",
+      "image": "gallery-images/nuyy.jpeg"
+    },
+    {
+      "code": "dapa",
+      "id": 30,
+      "title": "酒難飲",
+      "caption": "點解酒好飲？因為酒難飲！",
+      "insight": "點解好飲？因為難飲。阿占用 paradox 講人生：有時候我哋追求嘅唔係快樂，係挑戰。苦盡甘來先有味。",
+      "image": "gallery-images/dapa.jpeg"
+    }
+  ],
+  "total": 30
+}

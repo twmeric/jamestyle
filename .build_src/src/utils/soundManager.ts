@@ -10,7 +10,7 @@ let ambientNodes: {
   _oscillators: OscillatorNode[];
 } | null = null;
 
-let _enabled = false;
+let _enabled = true;
 let _initialized = false;
 
 function getCtx(): AudioContext | null {
@@ -36,10 +36,14 @@ function ensureInit() {
   }
 }
 
-// Auto-init on any click/touch
+// Auto-init on any click/touch — also retry BGM if autoplay was blocked
 if (typeof window !== 'undefined') {
-  const initEvents = ['click', 'touchstart', 'keydown'];
+  const initEvents = ['click', 'touchend', 'keydown'];
   const onceInit = () => {
+    // Play BGM first — must be the first call inside user gesture handler
+    if (_bgmEnabled && bgmAudio && bgmAudio.paused && currentTrack) {
+      bgmAudio.play().catch(() => {});
+    }
     ensureInit();
     initEvents.forEach((e) => window.removeEventListener(e, onceInit));
   };
@@ -243,4 +247,152 @@ export function toggleSound(): boolean {
     ensureInit();
   }
   return _enabled;
+}
+
+// ============================================================
+// Background Music (HTML5 Audio)
+// ============================================================
+
+type MusicTrack = 'healing' | 'gallery' | 'ending' | null;
+
+const MUSIC_URLS: Record<string, string> = {
+  healing: '/music/healing.mp3',
+  gallery: '/music/gallery.mp3',
+  ending: '/music/ending.mp3',
+};
+
+let bgmAudio: HTMLAudioElement | null = null;
+let currentTrack: MusicTrack = null;
+let _bgmEnabled = true; // default ON — user can toggle off
+let _bgmVolume = 0.3;
+
+function createAudio(url: string): HTMLAudioElement {
+  const audio = new Audio(url);
+  audio.loop = true;
+  audio.volume = _bgmVolume;
+  audio.preload = 'auto';
+  return audio;
+}
+
+/** Play a background music track — sequential fade out then fade in */
+export function playMusic(track: MusicTrack) {
+  if (track === currentTrack) return;
+
+  const prevAudio = bgmAudio;
+  currentTrack = track;
+
+  if (!track) {
+    // Stop current music
+    if (prevAudio) {
+      fadeOutAudio(prevAudio, 3000, () => {
+        prevAudio.pause();
+        prevAudio.currentTime = 0;
+      });
+    }
+    bgmAudio = null;
+    return;
+  }
+
+  // Sequential transition: fade out old → then fade in new
+  const startNewTrack = () => {
+    const newAudio = createAudio(MUSIC_URLS[track]);
+
+    // Slow down Canon for healing gallery pace (target ~60 BPM from ~72 BPM)
+    if (track === 'gallery') {
+      newAudio.playbackRate = 0.85;
+    }
+
+    newAudio.addEventListener('canplaythrough', () => {
+      newAudio.play().catch(() => {});
+    }, { once: true });
+
+    newAudio.addEventListener('error', () => {
+      console.warn('[BGM] Failed to load:', MUSIC_URLS[track]);
+    }, { once: true });
+
+    bgmAudio = newAudio;
+    newAudio.load();
+  };
+
+  if (prevAudio) {
+    // Fade out old track first, then start new track
+    fadeOutAudio(prevAudio, 3000, () => {
+      prevAudio.pause();
+      prevAudio.currentTime = 0;
+      startNewTrack();
+    });
+  } else {
+    // No old track — start new track immediately
+    startNewTrack();
+  }
+}
+
+// Smooth ease-in-out curve for natural volume transitions
+function easeInOutQuad(t: number): number {
+  return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+}
+
+function fadeInAudio(audio: HTMLAudioElement, durationMs: number) {
+  const start = audio.volume || 0;
+  const end = _bgmVolume;
+  const startTime = performance.now();
+
+  function tick(now: number) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / durationMs, 1);
+    const eased = easeInOutQuad(progress);
+    audio.volume = start + (end - start) * eased;
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function fadeOutAudio(audio: HTMLAudioElement, durationMs: number, onComplete?: () => void) {
+  const start = audio.volume || _bgmVolume;
+  const startTime = performance.now();
+
+  function tick(now: number) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / durationMs, 1);
+    const eased = easeInOutQuad(progress);
+    audio.volume = start * (1 - eased);
+    if (progress < 1) {
+      requestAnimationFrame(tick);
+    } else {
+      onComplete?.();
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+export function setBgmEnabled(enabled: boolean) {
+  _bgmEnabled = enabled;
+  if (!enabled) {
+    playMusic(null);
+  } else if (currentTrack) {
+    playMusic(currentTrack);
+  }
+}
+
+export function isBgmEnabled(): boolean {
+  return _bgmEnabled;
+}
+
+export function toggleBgm(): boolean {
+  _bgmEnabled = !_bgmEnabled;
+  setBgmEnabled(_bgmEnabled);
+  return _bgmEnabled;
+}
+
+export function setBgmVolume(vol: number) {
+  _bgmVolume = Math.max(0, Math.min(1, vol));
+  if (bgmAudio) bgmAudio.volume = _bgmVolume;
+}
+
+export function getBgmVolume(): number {
+  return _bgmVolume;
+}
+
+export function getCurrentTrack(): MusicTrack {
+  return currentTrack;
 }

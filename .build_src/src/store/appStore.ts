@@ -10,6 +10,7 @@ import {
   stopSlideTimer,
   submitDeviceMetrics,
   getSessionId,
+  getDeviceType,
 } from '../api/reactionsApi';
 import { setSoundEnabled as _setSoundEnabled, isSoundEnabled, toggleSound as _toggleSound } from '../utils/soundManager';
 import { unlockAchievement } from '../utils/achievements';
@@ -21,10 +22,6 @@ interface AppState {
   setLang: (lang: Lang) => void;
   currentSlide: number;
   setCurrentSlide: (n: number) => void;
-  showShareModal: boolean;
-  setShowShareModal: (v: boolean) => void;
-  shareSlideId: number | null;
-  setShareSlideId: (id: number | null) => void;
   favorites: number[];
   toggleFavorite: (id: number) => void;
   // Local user reactions (which emojis they've clicked)
@@ -55,7 +52,6 @@ interface AppState {
   trackInsightRead: (slideId: number, durationMs: number) => void;
   trackQuizAnswer: (step: number, answerIdx: number, durationMs: number) => void;
   trackShareAction: (slideId: number, action: 'download' | 'whatsapp' | 'webshare', success: boolean) => void;
-  trackTouchLatency: (latencyMs: number) => void;
   // Sound
   soundEnabled: boolean;
   toggleSound: () => boolean;
@@ -69,10 +65,6 @@ export const useAppStore = create<AppState>((set, get) => ({
   setLang: (lang) => set({ lang }),
   currentSlide: 0,
   setCurrentSlide: (n) => set({ currentSlide: n }),
-  showShareModal: false,
-  setShowShareModal: (v) => set({ showShareModal: v }),
-  shareSlideId: null,
-  setShareSlideId: (id) => set({ shareSlideId: id }),
   favorites: [],
   toggleFavorite: (id) => {
     set((state) => ({
@@ -178,7 +170,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         if (fcpEntry) fcpMs = Math.round(fcpEntry.startTime);
       } catch {}
 
-      submitDeviceMetrics({
+      await submitDeviceMetrics({
         sessionId,
         deviceType: getDeviceType(),
         screenWidth: screen.width,
@@ -200,7 +192,9 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     trackEvent('page_view', undefined, {
       url: window.location.href,
-      referrer: document.referrer,
+      referrer: document.referrer
+        ? (() => { try { return new URL(document.referrer).hostname; } catch { return null; } })()
+        : null,
     });
   },
 
@@ -273,12 +267,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     trackEventImmediate('share_action', slideId, { action, success });
   },
 
-  trackTouchLatency: (latencyMs: number) => {
-    trackEvent('touch_latency', undefined, { latencyMs });
-  },
-
   // Sound
-  soundEnabled: false,
+  soundEnabled: true,
   toggleSound: () => {
     const newState = _toggleSound();
     try {

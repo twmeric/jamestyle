@@ -17,7 +17,7 @@ export default function EndingScreen() {
   };
 
   return (
-    <div className="fixed inset-0 bg-james-dark overflow-y-auto px-8 py-10">
+    <div className="relative bg-james-dark overflow-y-auto px-8 py-10">
       {/* Subtle background glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-james-orange/[0.04] rounded-full blur-[150px]" />
@@ -25,7 +25,7 @@ export default function EndingScreen() {
       </div>
 
       <motion.div
-        className="relative text-center max-w-sm mx-auto min-h-[100dvh] flex flex-col justify-center"
+        className="relative text-center max-w-sm mx-auto min-h-[100dvh] flex flex-col justify-center pt-16 pb-10"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
@@ -134,11 +134,12 @@ export default function EndingScreen() {
 
           {/* Collage Generator */}
           <motion.button
-            className="w-full py-5 text-sm tracking-[3px] text-warm-gold/60 border border-warm-gold/15 rounded-xl uppercase transition-all duration-300 hover:text-warm-gold/80 hover:border-warm-gold/25"
+            className="w-full py-5 text-white text-sm tracking-[3px] rounded-xl uppercase flex items-center justify-center gap-3"
+            style={{ backgroundColor: '#25D366', boxShadow: '0 10px 15px -3px rgba(37, 211, 102, 0.3)' }}
             whileTap={{ scale: 0.97 }}
             onClick={() => setShowCollage(true)}
           >
-            🖼️ {lang === 'tc' ? '生成語錄卡片' : '生成语录卡片'}
+            💬 {lang === 'tc' ? 'Whatsapp 索取阿占卡片' : 'Whatsapp 索取阿占卡片'}
           </motion.button>
 
           {/* Replay */}
@@ -159,6 +160,16 @@ export default function EndingScreen() {
           transition={{ delay: 1.5 }}
         >
           {lang === 'tc' ? '已有 4,872 人看過這 15 張作品' : '已有 4,872 人看过这 15 张作品'}
+        </motion.p>
+
+        {/* Music credit */}
+        <motion.p
+          className="text-[9px] text-warm-gold/20 mt-4 tracking-[3px]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.8 }}
+        >
+          Music from Pixabay — Royalty Free
         </motion.p>
       </motion.div>
 

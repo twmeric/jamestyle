@@ -130,7 +130,7 @@ body::before {
   background: linear-gradient(135deg, #FAF8F3 0%, #FFF0D6 30%, #FAF8F3 60%, #FFF9EE 100%);
 }
 
-/* ===== Hermès-Inspired Reaction Button ===== */
+/* ===== Hermès-Inspired Reaction Button (Dark BG) ===== */
 .reaction-btn {
   @apply relative flex items-center gap-2 px-4 py-2.5 rounded-full text-base transition-all duration-300;
   background: rgba(255, 255, 255, 0.03);
@@ -146,11 +146,26 @@ body::before {
   color: #E8A06A;
 }
 
+/* ===== Reaction Button (Light BG) ===== */
+.reaction-btn-light {
+  @apply relative flex items-center gap-2 px-4 py-2.5 rounded-full text-base transition-all duration-300;
+  background: rgba(0, 0, 0, 0.03);
+  border: 0.5px solid rgba(0, 0, 0, 0.08);
+  color: #5a5a5a;
+}
+.reaction-btn-light:hover {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+.reaction-btn-light.active {
+  background: rgba(232, 98, 26, 0.08);
+  border-color: rgba(232, 98, 26, 0.25);
+  color: #D4842A;
+}
+
 /* ===== Insight Overlay ===== */
 .insight-glass {
-  background: rgba(13, 11, 9, 0.94);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
+  background: #F5F2ED;
 }
 
 /* ===== Hermès Luxury Utilities ===== */
@@ -166,13 +181,9 @@ body::before {
 }
 
 /* ===== Autoplay ring animation ===== */
-@keyframes autoplay-ring {
-  from { stroke-dashoffset: 113; }
-  to { stroke-dashoffset: 0; }
-}
-.autoplay-ring {
-  animation: autoplay-ring 5s linear forwards;
-}
+/* Removed: now controlled by framer-motion in CardGallery.tsx
+   to stay in sync with AUTOPLAY_INTERVAL dynamically.
+*/
 
 /* ===== Touch Ripple ===== */
 @keyframes ripple-expand {

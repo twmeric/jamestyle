@@ -110,7 +110,7 @@ const MATTE_CLASSES = [
   'bg-[#FAFAFA]',
 ];
 
-const AUTOPLAY_INTERVAL = 5000;
+const AUTOPLAY_INTERVAL = 10000;
 
 function formatCount(n: number): string {
   if (n >= 10000) return (n / 10000).toFixed(1) + 'w';
@@ -345,6 +345,7 @@ export default function CardGallery() {
             key={actName}
             initial={{ x: -15, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
             className="flex items-center gap-2 sm:gap-3"
           >
             <span className="text-base sm:text-lg">{actEmoji}</span>
@@ -359,7 +360,7 @@ export default function CardGallery() {
           <motion.div
             className="h-full bg-gradient-to-r from-[#E8621A]/60 to-[#C4956A]/40"
             animate={{ width: `${progress}%` }}
-            transition={{ type: 'spring', stiffness: 80, damping: 25 }}
+            transition={{ type: 'tween', duration: 1.2, ease: 'easeOut' }}
           />
         </div>
       </div>
@@ -383,32 +384,29 @@ export default function CardGallery() {
           ))}
         </AnimatePresence>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentSlide}
-            className="w-full max-w-[540px] cursor-grab active:cursor-grabbing"
-            style={{ x, rotate, opacity, perspective: 1200 }}
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.12}
-            onDragEnd={handleDragEnd}
-            initial={transitionVariant.initial}
-            animate={transitionVariant.animate}
-            exit={transitionVariant.exit}
-            transition={transitionVariant.transition}
-          >
+        <motion.div
+          className="w-full max-w-[540px] cursor-grab active:cursor-grabbing"
+          style={{ x, rotate, opacity, perspective: 1200 }}
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.12}
+          onDragEnd={handleDragEnd}
+        >
             <div className={`overflow-hidden ${FRAME_CLASSES[slide.act]} ${MATTE_CLASSES[slide.act]}`}>
               {/* Image */}
               <div className={`relative aspect-[4/3.5] flex items-center justify-center overflow-hidden ${MATTE_CLASSES[slide.act]}`}>
-                <motion.img
-                  key={slide.img}
-                  src={slide.img}
-                  alt={`作品 ${slide.id}`}
-                  className="w-full h-full object-contain p-4 sm:p-5"
-                  initial={imgVariant.initial}
-                  animate={imgVariant.animate}
-                  transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                />
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={slide.img}
+                    src={slide.img}
+                    alt={`作品 ${slide.id}`}
+                    className="w-full h-full object-contain p-4 sm:p-5"
+                    initial={imgVariant.initial}
+                    animate={imgVariant.animate}
+                    exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.6 } }}
+                    transition={{ duration: 1.6, ease: [0.16, 1, 0.3, 1] }}
+                  />
+                </AnimatePresence>
 
                 {/* Insight overlay */}
                 <AnimatePresence>
@@ -418,6 +416,7 @@ export default function CardGallery() {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
+                      transition={{ duration: 0.6 }}
                       onClick={() => setShowInsight(null)}
                     >
                       <div className="text-center">
@@ -458,18 +457,36 @@ export default function CardGallery() {
               </div>
 
               {/* Caption */}
-              <div className="px-5 sm:px-7 pt-4 sm:pt-5 pb-3 sm:pb-4">
-                <p className="text-base sm:text-lg md:text-xl leading-[2] text-[#5A5248] text-center tracking-wide">
-                  {slide.caption[lang]}
-                </p>
-              </div>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={`cap-${currentSlide}`}
+                  className="px-5 sm:px-7 pt-4 sm:pt-5 pb-3 sm:pb-4"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10, transition: { duration: 0.4 } }}
+                  transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <p className="text-base sm:text-lg md:text-xl leading-[2] text-[#5A5248] text-center tracking-wide">
+                    {slide.caption[lang]}
+                  </p>
+                </motion.div>
+              </AnimatePresence>
 
               {/* Exhibition Plaque — artwork title */}
-              <div className="text-center pb-4 sm:pb-5">
-                <span className="text-xs sm:text-sm text-[#E8621A] font-bold tracking-[2px] sm:tracking-[3px]">
-                  【{slide.title[lang]}】
-                </span>
-              </div>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={`plaque-${currentSlide}`}
+                  className="text-center pb-4 sm:pb-5"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8, transition: { duration: 0.4 } }}
+                  transition={{ duration: 1.0, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <span className="text-xs sm:text-sm text-[#E8621A] font-bold tracking-[2px] sm:tracking-[3px]">
+                    【{slide.title[lang]}】
+                  </span>
+                </motion.div>
+              </AnimatePresence>
             </div>
 
             {/* Emotion Spectrum Vote */}
@@ -501,8 +518,7 @@ export default function CardGallery() {
                 );
               })}
             </div>
-          </motion.div>
-        </AnimatePresence>
+        </motion.div>
       </div>
 
       {/* Bottom Controls */}
@@ -536,15 +552,16 @@ export default function CardGallery() {
             {/* SVG ring progress indicator */}
             {isAutoPlaying && (
               <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 48 48">
-                <circle
+                <motion.circle
                   key={autoplayKey}
                   cx="24" cy="24" r="18"
                   fill="none"
                   stroke="rgba(42, 42, 42, 0.4)"
                   strokeWidth="0.8"
                   strokeDasharray="113"
-                  strokeDashoffset="113"
-                  className="autoplay-ring"
+                  initial={{ strokeDashoffset: 113 }}
+                  animate={{ strokeDashoffset: 0 }}
+                  transition={{ duration: AUTOPLAY_INTERVAL / 1000, ease: 'linear' }}
                 />
               </svg>
             )}
@@ -610,6 +627,7 @@ function EmotionVoteBar({ slideId, lang }: { slideId: number; lang: 'tc' | 'sc' 
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
           className="flex items-center justify-center gap-2 text-xs text-gray-400"
         >
           <span>✨</span>

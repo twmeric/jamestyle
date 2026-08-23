@@ -64,15 +64,57 @@ export const cardShares = sqliteTable("card_shares", {
   shareToken: text("share_token").notNull().unique(),
   status: text("status").default("pending"),
   sharedAt: integer("shared_at", { mode: "number" }),
+  phone: text("phone"),
+  downloadedAt: integer("downloaded_at", { mode: "number" }),
   createdAt: integer("created_at", { mode: "number" }).default(sql`unixepoch()`).notNull(),
+});
+
+export const settings = sqliteTable("settings", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  key: text("key").notNull().unique(),
+  value: text("value"),
+  updatedAt: integer("updated_at", { mode: "number" }).default(sql`unixepoch()`).notNull(),
 });
 
 export const whatsappLeads = sqliteTable("whatsapp_leads", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
   phone: text("phone").notNull().unique(),
+  sessionId: text("session_id"),
+  shareToken: text("share_token"),
+  firstSlideId: integer("first_slide_id", { mode: "number" }),
+  cardUrl: text("card_url"),
   firstContactAt: integer("first_contact_at", { mode: "number" }).default(sql`unixepoch()`).notNull(),
   source: text("source").default("card_share"),
   shareCount: integer("share_count", { mode: "number" }).default(1),
   lastShareAt: integer("last_share_at", { mode: "number" }),
   conversationHistory: text("conversation_history"),
+});
+
+export const subscribers = sqliteTable("subscribers", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  phone: text("phone"),
+  name: text("name"),
+  sourceCode: text("source_code"),
+  status: text("status").default("pending"),
+  createdAt: integer("created_at", { mode: "number" }).default(sql`unixepoch()`).notNull(),
+});
+
+export const quotes = sqliteTable("quotes", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  code: text("code").notNull().unique(),
+  title: text("title").notNull(),
+  caption: text("caption").notNull(),
+  insight: text("insight").notNull(),
+  image: text("image").notNull(),
+  todayInsight: text("today_insight"),
+  updatedAt: integer("updated_at", { mode: "number" }).default(sql`unixepoch()`),
+  orderId: integer("order_id", { mode: "number" }).default(0),
+});
+
+export const quoteReactions = sqliteTable("quote_reactions", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  quoteCode: text("quote_code").notNull(),
+  reactionType: text("reaction_type").notNull(),
+  sessionId: text("session_id").notNull(),
+  createdAt: integer("created_at", { mode: "number" }).default(sql`unixepoch()`),
 });

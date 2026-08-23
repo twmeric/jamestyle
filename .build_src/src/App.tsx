@@ -4,7 +4,7 @@ import HealingIntro from './components/HealingIntro';
 import Opening from './components/Opening';
 import CardGallery from './components/CardGallery';
 import EndingScreen from './components/EndingScreen';
-import ShareModal from './components/ShareModal';
+
 
 import LangToggle from './components/LangToggle';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
@@ -13,6 +13,8 @@ import GlitchEffect from './components/GlitchEffect';
 import AchievementToast from './components/AchievementToast';
 import { motion } from 'framer-motion';
 import { checkTimeBasedAchievements, recordVisitAndCheckStreak } from './utils/achievements';
+
+import { playMusic } from './utils/soundManager';
 
 function App() {
   const { phase, lang, initTracking, setPhase } = useAppStore();
@@ -23,6 +25,7 @@ function App() {
     initTracking();
     checkTimeBasedAchievements();
     recordVisitAndCheckStreak();
+    playMusic('healing');
   }, [initTracking]);
 
   // Secret key combo to open analytics: press 'a' 3 times quickly
@@ -49,6 +52,17 @@ function App() {
     };
   }, []);
 
+  // Background music per phase
+  useEffect(() => {
+    if (phase === 'healing') {
+      playMusic('healing');
+    } else if (phase === 'gallery') {
+      playMusic('gallery');
+    } else if (phase === 'ending') {
+      playMusic('ending');
+    }
+  }, [phase]);
+
   if (showAnalytics) {
     return <AnalyticsDashboard onClose={() => setShowAnalytics(false)} />;
   }
@@ -70,12 +84,62 @@ function App() {
       {phase === 'ending' && <EndingScreen />}
 
       {/* Modals */}
-      <ShareModal />
+
 
       {/* Visual Effects */}
       <TouchRipple />
       <GlitchEffect />
       <AchievementToast />
+
+      {/* Powered by Footer — normal flow block, scroll to see */}
+      {phase === 'ending' && (
+        <footer className="relative z-40 bg-[#0a0a0a] pt-8 pb-4 px-4">
+          <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-1">
+            <span className="text-[10px] text-cream/25 tracking-wider">
+              © 2026 JameStyle.com
+            </span>
+            <a
+              href="https://jkdcoding.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 opacity-50 hover:opacity-100 transition-opacity"
+            >
+              <span className="text-[10px] text-cream/30">
+                Powered by{' '}
+                <span
+                  className="font-bold"
+                  style={{
+                    color: '#FFFF00',
+                    textShadow: '0 0 8px rgba(255,255,0,0.6)',
+                  }}
+                >
+                  JKDCoding
+                </span>
+              </span>
+            </a>
+            <div className="flex items-center gap-3 text-[10px] text-cream/20">
+              <a
+                href="/privacy.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-cream/50 transition-colors"
+              >
+                {lang === 'sc' ? '隐私政策' : '隱私政策'}
+              </a>
+              <span>|</span>
+              <a
+                href="/terms.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-cream/50 transition-colors"
+              >
+                {lang === 'sc' ? '使用条款' : '使用條款'}
+              </a>
+            </div>
+          </div>
+        </footer>
+      )}
+
     </div>
   );
 }

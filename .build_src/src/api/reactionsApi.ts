@@ -6,6 +6,8 @@ const client = createEdgeSpark({
   baseUrl: API_BASE_URL,
 });
 
+const ADMIN_TOKEN = "jamestyle-admin-2025";
+
 export interface ReactionCount {
   slideId: number;
   reactionType: string;
@@ -28,7 +30,7 @@ function generateUUID(): string {
   });
 }
 
-function getDeviceType(): string {
+export function getDeviceType(): string {
   const ua = navigator.userAgent;
   if (/tablet|ipad|playbook|silk/i.test(ua)) return "tablet";
   if (/mobile|iphone|ipod|android.*mobile|opera\s*m/i.test(ua)) return "mobile";
@@ -311,7 +313,9 @@ export async function fetchSlideReactions(
 
 export async function fetchAnalyticsSummary(): Promise<any> {
   try {
-    const res = await client.api.fetch("/api/public/analytics/summary");
+    const res = await client.api.fetch("/api/public/analytics/summary", {
+      headers: { "X-Admin-Token": ADMIN_TOKEN },
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json() as { data: any };
     return json.data;
@@ -323,7 +327,9 @@ export async function fetchAnalyticsSummary(): Promise<any> {
 
 export async function fetchSlideHeatmap(): Promise<any> {
   try {
-    const res = await client.api.fetch("/api/public/analytics/slide-heatmap");
+    const res = await client.api.fetch("/api/public/analytics/slide-heatmap", {
+      headers: { "X-Admin-Token": ADMIN_TOKEN },
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json() as { data: any };
     return json.data;
@@ -335,7 +341,9 @@ export async function fetchSlideHeatmap(): Promise<any> {
 
 export async function fetchFanScores(): Promise<any> {
   try {
-    const res = await client.api.fetch("/api/public/analytics/fan-scores");
+    const res = await client.api.fetch("/api/public/analytics/fan-scores", {
+      headers: { "X-Admin-Token": ADMIN_TOKEN },
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json() as { data: any };
     return json.data;
@@ -347,7 +355,9 @@ export async function fetchFanScores(): Promise<any> {
 
 export async function fetchTimeline(days: number = 7): Promise<any> {
   try {
-    const res = await client.api.fetch(`/api/public/analytics/timeline?days=${days}`);
+    const res = await client.api.fetch(`/api/public/analytics/timeline?days=${days}`, {
+      headers: { "X-Admin-Token": ADMIN_TOKEN },
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json() as { data: any };
     return json.data;
@@ -357,21 +367,11 @@ export async function fetchTimeline(days: number = 7): Promise<any> {
   }
 }
 
-export async function fetchSessionDetail(sessionId: string): Promise<any> {
-  try {
-    const res = await client.api.fetch(`/api/public/analytics/session/${sessionId}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json() as { data: any };
-    return json.data;
-  } catch (e) {
-    console.warn("[Analytics] Failed to fetch session detail:", e);
-    return null;
-  }
-}
-
 export async function fetchOpeningFunnel(): Promise<any> {
   try {
-    const res = await client.api.fetch("/api/public/analytics/opening-funnel");
+    const res = await client.api.fetch("/api/public/analytics/opening-funnel", {
+      headers: { "X-Admin-Token": ADMIN_TOKEN },
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json() as { data: any };
     return json.data;
@@ -398,7 +398,6 @@ export async function submitDeviceMetrics(data: {
   language?: string;
   timezone?: string;
   memoryGb?: number;
-  touchLatencyMs?: number;
   maxTouchPoints?: number;
 }): Promise<void> {
   try {
@@ -412,9 +411,38 @@ export async function submitDeviceMetrics(data: {
   }
 }
 
+export async function fetchSetting(key: string): Promise<string | null> {
+  try {
+    const res = await client.api.fetch(`/api/public/settings/${key}`);
+    if (!res.ok) return null;
+    const json = await res.json() as { data: { value: string } | null };
+    return json.data?.value ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function updateSetting(key: string, value: string): Promise<boolean> {
+  try {
+    const res = await client.api.fetch("/api/admin/settings", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Reset-Token": "jamesstyle-reset-2025",
+      },
+      body: JSON.stringify({ key, value }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 export async function fetchDeviceAnalytics(): Promise<any> {
   try {
-    const res = await client.api.fetch("/api/public/analytics/device");
+    const res = await client.api.fetch("/api/public/analytics/device", {
+      headers: { "X-Admin-Token": ADMIN_TOKEN },
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json() as { data: any };
     return json.data;
@@ -434,7 +462,9 @@ export async function postEmotionVote(slideId: number, emotion: string): Promise
 
 export async function fetchEngagementAnalytics(): Promise<any> {
   try {
-    const res = await client.api.fetch("/api/public/analytics/engagement");
+    const res = await client.api.fetch("/api/public/analytics/engagement", {
+      headers: { "X-Admin-Token": ADMIN_TOKEN },
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json() as { data: any };
     return json.data;
@@ -446,7 +476,9 @@ export async function fetchEngagementAnalytics(): Promise<any> {
 
 export async function fetchWhatsAppLeads(): Promise<any> {
   try {
-    const res = await client.api.fetch("/api/public/analytics/whatsapp-leads");
+    const res = await client.api.fetch("/api/public/analytics/whatsapp-leads", {
+      headers: { "X-Admin-Token": ADMIN_TOKEN },
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json() as { data: any };
     return json.data;
@@ -454,4 +486,129 @@ export async function fetchWhatsAppLeads(): Promise<any> {
     console.warn("[Analytics] Failed to fetch WhatsApp leads:", e);
     return null;
   }
+}
+
+export async function fetchConversionFunnel(): Promise<any> {
+  try {
+    const res = await client.api.fetch("/api/public/analytics/conversion-funnel", {
+      headers: { "X-Admin-Token": ADMIN_TOKEN },
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json() as { data: any };
+    return json.data;
+  } catch (e) {
+    console.warn("[Analytics] Failed to fetch conversion funnel:", e);
+    return null;
+  }
+}
+
+export async function fetchCardDownloads(): Promise<any> {
+  try {
+    const res = await client.api.fetch("/api/public/analytics/card-downloads", {
+      headers: { "X-Admin-Token": ADMIN_TOKEN },
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json() as { data: any };
+    return json.data;
+  } catch (e) {
+    console.warn("[Analytics] Failed to fetch card downloads:", e);
+    return null;
+  }
+}
+
+export async function fetchCustomerJourney(phone: string): Promise<any> {
+  try {
+    const res = await client.api.fetch(`/api/public/analytics/customer-journey/${encodeURIComponent(phone)}`, {
+      headers: { "X-Admin-Token": ADMIN_TOKEN },
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json() as { data: any };
+    return json.data;
+  } catch (e) {
+    console.warn("[Analytics] Failed to fetch customer journey:", e);
+    return null;
+  }
+}
+
+export async function fetchQuoteReactions(): Promise<any> {
+  try {
+    const res = await client.api.fetch("/api/public/analytics/quote-reactions", {
+      headers: { "X-Admin-Token": ADMIN_TOKEN },
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json() as { data: any };
+    return json.data;
+  } catch (e) {
+    console.warn("[Analytics] Failed to fetch quote reactions:", e);
+    return null;
+  }
+}
+
+export async function fetchSubscribers(): Promise<any> {
+  try {
+    const res = await client.api.fetch("/api/public/analytics/subscribers", {
+      headers: { "X-Admin-Token": ADMIN_TOKEN },
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json() as { data: any };
+    return json.data;
+  } catch (e) {
+    console.warn("[Analytics] Failed to fetch subscribers:", e);
+    return null;
+  }
+}
+
+export async function fetchDropOff(): Promise<any> {
+  try {
+    const res = await client.api.fetch("/api/public/analytics/drop-off", {
+      headers: { "X-Admin-Token": ADMIN_TOKEN },
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json() as { data: any };
+    return json.data;
+  } catch (e) {
+    console.warn("[Analytics] Failed to fetch drop-off:", e);
+    return null;
+  }
+}
+
+export async function fetchContentPerformance(): Promise<any> {
+  try {
+    const res = await client.api.fetch("/api/public/analytics/content-performance", {
+      headers: { "X-Admin-Token": ADMIN_TOKEN },
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json() as { data: any };
+    return json.data;
+  } catch (e) {
+    console.warn("[Analytics] Failed to fetch content performance:", e);
+    return null;
+  }
+}
+
+export async function fetchConversionPaths(): Promise<any> {
+  try {
+    const res = await client.api.fetch("/api/public/analytics/conversion-paths", {
+      headers: { "X-Admin-Token": ADMIN_TOKEN },
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json() as { data: any };
+    return json.data;
+  } catch (e) {
+    console.warn("[Analytics] Failed to fetch conversion paths:", e);
+    return null;
+  }
+}
+
+// ============================================================
+// CARD SHARE REQUEST (for WhatsApp deeplink)
+// ============================================================
+
+export async function requestCardShare(slideId: number, sessionId?: string) {
+  const res = await client.api.fetch("/api/public/card-share/request", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ slideId, sessionId }),
+  });
+  return res.json();
 }

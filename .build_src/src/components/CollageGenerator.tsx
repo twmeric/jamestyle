@@ -38,20 +38,53 @@ function wrapText(
   text: string,
   maxWidth: number
 ): string[] {
-  const chars = text.split('');
-  let line = '';
+  // Split by punctuation to get natural segments (prioritize breaking at punctuation)
+  const segments = text.split(/([，。！？；：、])/);
+  const parts: string[] = [];
+  for (let i = 0; i < segments.length; i += 2) {
+    const word = segments[i];
+    const punct = segments[i + 1] || '';
+    if (word || punct) {
+      parts.push(word + punct);
+    }
+  }
+
   const lines: string[] = [];
-  for (const char of chars) {
-    const test = line + char;
+  let line = '';
+
+  for (const part of parts) {
+    const test = line + part;
     if (ctx.measureText(test).width > maxWidth && line.length > 0) {
       lines.push(line);
-      line = char;
+      line = part;
     } else {
       line = test;
     }
   }
   if (line) lines.push(line);
-  return lines;
+
+  // Fallback: character-level wrap for any line that still exceeds maxWidth
+  const result: string[] = [];
+  for (const line of lines) {
+    if (ctx.measureText(line).width > maxWidth) {
+      const chars = line.split('');
+      let subLine = '';
+      for (const char of chars) {
+        const test = subLine + char;
+        if (ctx.measureText(test).width > maxWidth && subLine.length > 0) {
+          result.push(subLine);
+          subLine = char;
+        } else {
+          subLine = test;
+        }
+      }
+      if (subLine) result.push(subLine);
+    } else {
+      result.push(line);
+    }
+  }
+
+  return result;
 }
 
 type Step = 'select' | 'generating' | 'result';
@@ -95,10 +128,10 @@ export default function CollageGenerator({ onClose }: Props) {
       ctx.fillStyle = '#FAF8F3';
       ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
-      // 2. Load and draw image with frame
+      // 2. Load and draw image with frame (enlarged)
       const img = await loadImage(slide.img);
-      const maxW = 700;
-      const maxH = 520;
+      const maxW = 1050;
+      const maxH = 780;
       const aspect =
         img.naturalWidth && img.naturalHeight
           ? img.naturalWidth / img.naturalHeight
@@ -146,15 +179,15 @@ export default function CollageGenerator({ onClose }: Props) {
       const caption = slide.caption[lang];
 
       // Determine font size based on caption length
-      let fontSize = 42;
-      let lineHeight = 56;
+      let fontSize = 50;
+      let lineHeight = 64;
       if (caption.length > 20) {
-        fontSize = 36;
-        lineHeight = 48;
+        fontSize = 44;
+        lineHeight = 56;
       }
       if (caption.length > 40) {
-        fontSize = 30;
-        lineHeight = 42;
+        fontSize = 38;
+        lineHeight = 50;
       }
       ctx.font = `${fontSize}px "LXGW WenKai", "PingFang TC", sans-serif`;
 
@@ -167,8 +200,8 @@ export default function CollageGenerator({ onClose }: Props) {
 
       // Scale down further if too many lines after wrapping
       if (lines.length > 4) {
-        fontSize = 26;
-        lineHeight = 36;
+        fontSize = 34;
+        lineHeight = 44;
         ctx.font = `${fontSize}px "LXGW WenKai", "PingFang TC", sans-serif`;
         lines.length = 0;
         for (const raw of rawLines) {
@@ -181,42 +214,66 @@ export default function CollageGenerator({ onClose }: Props) {
         ctx.fillText(line, CANVAS_W / 2, quoteY + i * lineHeight);
       });
 
-      // 4. Signature
-      const sigY = quoteY + lines.length * lineHeight + 40;
-      ctx.fillStyle = 'rgba(196, 149, 106, 0.8)';
-      ctx.font = `26px "LXGW WenKai", "PingFang TC", sans-serif`;
-      ctx.fillText('— ' + t('阿占隨意', '阿占随意'), CANVAS_W / 2, sigY);
-
-      // 5. Postmark stamp (dashed concentric circles)
-      const stampY = sigY + 70;
-      const stampRadius = 55;
+      // 5. Postmark stamp (realistic circular seal)
+      const stampR = 75;
+      const stampCx = frameX + frameW - (stampR * 2) / 3;
+      const stampCy = frameY + frameH - (stampR * 2) / 3;
       ctx.save();
-      ctx.translate(CANVAS_W / 2, stampY);
-      ctx.strokeStyle = 'rgba(196, 149, 106, 0.35)';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([4, 4]);
+      ctx.translate(stampCx, stampCy);
+      ctx.rotate((40 * Math.PI) / 180);
+      
+      // Outer ring
+      ctx.strokeStyle = 'rgba(74, 74, 74, 0.85)';
+      ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.arc(0, 0, stampRadius, 0, Math.PI * 2);
+      ctx.arc(0, 0, stampR, 0, Math.PI * 2);
+      ctx.stroke();
+      
+      // Inner thin ring
+      ctx.strokeStyle = 'rgba(74, 74, 74, 0.4)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(0, 0, stampR - 6, 0, Math.PI * 2);
+      ctx.stroke();
+      
+      // Ribbon band (two horizontal lines)
+      const bandY = -12;
+      const bandH = 24;
+      const lineLen = Math.floor(stampR * 1.3);
+      ctx.strokeStyle = 'rgba(74, 74, 74, 0.85)';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(-lineLen / 2, bandY);
+      ctx.lineTo(lineLen / 2, bandY);
       ctx.stroke();
       ctx.beginPath();
-      ctx.arc(0, 0, stampRadius - 10, 0, Math.PI * 2);
+      ctx.moveTo(-lineLen / 2, bandY + bandH);
+      ctx.lineTo(lineLen / 2, bandY + bandH);
       ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = 'rgba(90, 82, 72, 0.5)';
-      ctx.font = `14px "LXGW WenKai", "PingFang TC", sans-serif`;
+      
+      // Center text: JAMESTYLE
+      ctx.fillStyle = 'rgba(74, 74, 74, 0.9)';
+      ctx.font = `bold 16px Arial, sans-serif`;
       ctx.textAlign = 'center';
-      const today = new Date().toLocaleDateString('zh-HK');
-      ctx.fillText(today, 0, -4);
-      ctx.font = '12px monospace';
-      ctx.fillStyle = 'rgba(90, 82, 72, 0.35)';
-      ctx.fillText('JAMESTYLE', 0, 14);
+      ctx.fillText('JAMESTYLE', 0, 5);
+      
+      // Top text: today's date (dynamic)
+      const today = new Date();
+      const dateStr = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
+      ctx.font = `18px Arial, sans-serif`;
+      ctx.fillText(dateStr, 0, bandY - 14);
+
+      // Bottom text: 阿占隨意
+      ctx.font = `18px "LXGW WenKai", "PingFang TC", sans-serif`;
+      ctx.fillText('阿占隨意', 0, bandY + bandH + 26);
+      
       ctx.restore();
 
       // 6. Footer
       ctx.fillStyle = '#5A5248';
-      ctx.font = `bold 22px "LXGW WenKai", "PingFang TC", sans-serif`;
+      ctx.font = `bold 26px "LXGW WenKai", "PingFang TC", sans-serif`;
       ctx.textAlign = 'center';
-      ctx.fillText('JameStyle.com', CANVAS_W / 2, CANVAS_H - 80);
+      ctx.fillText('JameStyle.com', CANVAS_W / 2, CANVAS_H - 50);
 
       // Export
       canvas.toBlob((blob) => {
@@ -245,15 +302,6 @@ export default function CollageGenerator({ onClose }: Props) {
     generateCard(slideId);
   };
 
-  const handleDownload = () => {
-    if (!imageUrl || !selectedSlideId) return;
-    const a = document.createElement('a');
-    a.href = imageUrl;
-    a.download = `jamestyle-card-${selectedSlideId}-${Date.now()}.png`;
-    a.click();
-    trackEventImmediate('card_download', undefined, { slideId: selectedSlideId });
-  };
-
   const handleShare = async () => {
     if (!selectedSlideId) return;
     try {
@@ -262,7 +310,7 @@ export default function CollageGenerator({ onClose }: Props) {
       if (res.deepLink) {
         window.open(res.deepLink, '_blank');
         setShareNotice(
-          t('已開啟 WhatsApp，請發送給阿占 ✨', '已开启 WhatsApp，请发送给阿占 ✨')
+          t('已開啟 WhatsApp，請發送訊息索取卡片 ✨', '已开启 WhatsApp，请发送讯息索取卡片 ✨')
         );
         trackEventImmediate('card_share_click', undefined, {
           slideId: selectedSlideId,
@@ -318,18 +366,30 @@ export default function CollageGenerator({ onClose }: Props) {
               {SLIDES.map((slide) => (
                 <motion.button
                   key={slide.id}
-                  className="relative aspect-square rounded-xl overflow-hidden border-2 border-white/5 hover:border-warm-gold/40 transition-all duration-300"
+                  className="relative group"
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleSelectSlide(slide.id)}
                 >
-                  <img
-                    src={slide.img}
-                    alt={slide.caption[lang]}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
-                    <span className="text-2xl">{slide.emoji}</span>
+                  {/* № 編號標籤 — mobile 再縮小30%，PC 粗體 */}
+                  <span className="absolute -top-1.5 -right-1.5 sm:-top-2.5 sm:-right-2 z-20
+                    bg-james-dark/85 backdrop-blur-sm
+                    border border-warm-gold/40
+                    text-warm-gold text-[8px] sm:text-base md:text-lg font-light tracking-[0.2em] sm:font-bold sm:font-['Arial']
+                    px-1.5 py-0.5 sm:px-3 sm:py-1 md:px-3.5 md:py-1.5 rounded-bl-lg sm:rounded-bl-xl rounded-tr-sm
+                    shadow-lg shadow-black/30">
+                    №{String(slide.id).padStart(2, '0')}
+                  </span>
+
+                  <div className="relative aspect-square rounded-xl overflow-hidden border-2 border-white/5 group-hover:border-warm-gold/40 transition-all duration-300">
+                    <img
+                      src={slide.img}
+                      alt={slide.caption[lang]}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <span className="text-2xl">{slide.emoji}</span>
+                    </div>
                   </div>
                 </motion.button>
               ))}
@@ -359,38 +419,38 @@ export default function CollageGenerator({ onClose }: Props) {
           </motion.div>
         )}
 
-        {/* Step 3: Result */}
-        {step === 'result' && (
+        {/* Step 3: Result — no image preview, only quote + title + WhatsApp CTA */}
+        {step === 'result' && selectedSlideId && (
           <motion.div
             key="result"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="flex-1 flex flex-col items-center justify-center px-5 pb-6 overflow-y-auto"
           >
-            <div className="relative max-h-[55vh] rounded-2xl overflow-hidden shadow-2xl shadow-black/40 border border-white/5 mt-4">
-              {imageUrl && (
-                <img
-                  src={imageUrl}
-                  alt="card"
-                  className="h-full w-auto object-contain"
-                />
-              )}
-            </div>
+            {(() => {
+              const slide = SLIDES.find((s) => s.id === selectedSlideId);
+              if (!slide) return null;
+              return (
+                <div className="text-center max-w-sm mx-auto">
+                  <div className="text-[10px] text-warm-gold/60 tracking-[0.25em] mb-6 uppercase">
+                    № {String(slide.id).padStart(2, '0')} · {slide.title[lang]}
+                  </div>
+                  <div className="w-8 h-[0.5px] bg-warm-gold/30 mx-auto mb-8" />
+                  <p className="text-xl leading-[2] text-cream/90 tracking-wide mb-8">
+                    「{slide.caption[lang]}」
+                  </p>
+                  <p className="text-sm text-cream/40 mb-10">— 阿占隨意</p>
+                </div>
+              );
+            })()}
 
-            <div className="grid grid-cols-2 gap-3 mt-5 w-full max-w-xs">
+            <div className="flex justify-center w-full max-w-xs mx-auto">
               <motion.button
-                className="py-3 bg-white/5 text-cream text-sm tracking-[2px] rounded-xl border border-white/10 flex items-center justify-center gap-2"
-                whileTap={{ scale: 0.97 }}
-                onClick={handleDownload}
-              >
-                ⬇️ {t('下載保存', '下载保存')}
-              </motion.button>
-              <motion.button
-                className="py-3 bg-james-orange text-white text-sm tracking-[2px] rounded-xl shadow-lg shadow-james-orange/20 flex items-center justify-center gap-2"
+                className="w-full py-3.5 bg-james-orange text-white text-sm tracking-[2px] rounded-xl shadow-lg shadow-james-orange/20 flex items-center justify-center gap-2"
                 whileTap={{ scale: 0.97 }}
                 onClick={handleShare}
               >
-                📲 {t('傳給阿占', '传给阿占')}
+                💬 {t('WhatsApp 索取這張卡片', 'WhatsApp 索取这张卡片')}
               </motion.button>
             </div>
 
@@ -405,7 +465,7 @@ export default function CollageGenerator({ onClose }: Props) {
             )}
 
             <motion.button
-              className="mt-3 text-xs text-cream/40 hover:text-cream/60 tracking-[2px]"
+              className="mt-4 text-xs text-cream/40 hover:text-cream/60 tracking-[2px]"
               whileTap={{ scale: 0.97 }}
               onClick={() => {
                 setSelectedSlideId(null);

@@ -372,6 +372,7 @@ export default function HealingIntro({ onComplete }: { onComplete: () => void })
   useEffect(() => {
     if (phase !== 'complete') return;
     trackEvent('opening_complete_seen');
+    window.dispatchEvent(new CustomEvent('hide-achievement-toast'));
     const t = setTimeout(() => {
       setPhase('exiting');
       setTimeout(onComplete, 1000);
@@ -653,12 +654,13 @@ export default function HealingIntro({ onComplete }: { onComplete: () => void })
             </AnimatePresence>
 
             {/* Skip */}
-            <button
-              className="absolute bottom-8 right-6 text-[#C4956A]/30 text-sm tracking-wider hover:text-[#C4956A]/70 transition-colors duration-300 cursor-pointer"
+            <motion.button
+              className="absolute bottom-8 right-6 text-[10px] text-cream/30 tracking-[3px] hover:text-cream/50 transition-colors px-2 py-1"
+              whileTap={{ scale: 0.9 }}
               onClick={skipAll}
             >
-              {lang === 'sc' ? '跳过' : '跳過'}
-            </button>
+              {lang === 'tc' ? '跳過 →' : '跳过 →'}
+            </motion.button>
           </motion.div>
         )}
       </AnimatePresence>

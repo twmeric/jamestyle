@@ -7,6 +7,7 @@ export default function AchievementToast() {
   const { lang } = useAppStore();
   const [queue, setQueue] = useState<AchievementDef[]>([]);
   const [current, setCurrent] = useState<AchievementDef | null>(null);
+  const [visible, setVisible] = useState(true);
 
   useEffect(() => {
     const handleUnlock = (e: Event) => {
@@ -16,8 +17,17 @@ export default function AchievementToast() {
         setQueue((prev) => [...prev, ach]);
       }
     };
+    const handleHide = () => {
+      setVisible(false);
+      setCurrent(null);
+      setQueue([]);
+    };
     window.addEventListener('achievement-unlocked', handleUnlock);
-    return () => window.removeEventListener('achievement-unlocked', handleUnlock);
+    window.addEventListener('hide-achievement-toast', handleHide);
+    return () => {
+      window.removeEventListener('achievement-unlocked', handleUnlock);
+      window.removeEventListener('hide-achievement-toast', handleHide);
+    };
   }, []);
 
   // Process queue
@@ -30,7 +40,7 @@ export default function AchievementToast() {
     return () => clearTimeout(t);
   }, [queue, current]);
 
-  if (!current) return null;
+  if (!visible || !current) return null;
 
   return (
     <AnimatePresence>
@@ -41,7 +51,7 @@ export default function AchievementToast() {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -10, scale: 0.95 }}
           transition={{ duration: 0.4, ease: 'easeOut' }}
-          className="fixed top-20 left-6 z-[100] px-5 py-3 rounded-2xl flex items-center gap-3"
+          className="fixed top-4 left-4 z-[100] px-5 py-3 rounded-2xl flex items-center gap-3"
           style={{
             background: 'rgba(13, 11, 9, 0.85)',
             backdropFilter: 'blur(20px)',

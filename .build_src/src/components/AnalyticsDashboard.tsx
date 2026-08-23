@@ -6,11 +6,19 @@ import {
   fetchAnalyticsSummary,
   fetchSlideHeatmap,
   fetchFanScores,
-  fetchTimeline,
   fetchOpeningFunnel,
-  fetchDeviceAnalytics,
   fetchEngagementAnalytics,
   fetchWhatsAppLeads,
+  fetchConversionFunnel,
+  fetchCardDownloads,
+  fetchCustomerJourney,
+  fetchQuoteReactions,
+  fetchSubscribers,
+  fetchDropOff,
+  fetchContentPerformance,
+  fetchConversionPaths,
+  fetchSetting,
+  updateSetting,
 } from '../api/reactionsApi';
 
 interface Props {
@@ -70,46 +78,137 @@ export default function AnalyticsDashboard({ onClose }: Props) {
   const [deviceAnalytics, setDeviceAnalytics] = useState<any>(null);
   const [engagement, setEngagement] = useState<any>(null);
   const [whatsappData, setWhatsappData] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'opening' | 'heatmap' | 'fans' | 'timeline' | 'device' | 'emotions' | 'achievements' | 'whatsapp'>('overview');
+  const [conversionFunnel, setConversionFunnel] = useState<any>(null);
+  const [cardDownloads, setCardDownloads] = useState<any>(null);
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const [customerJourney, setCustomerJourney] = useState<any>(null);
+  const [quoteReactions, setQuoteReactions] = useState<any>(null);
+  const [subscribers, setSubscribers] = useState<any>(null);
+  const [dropOff, setDropOff] = useState<any>(null);
+  const [contentPerf, setContentPerf] = useState<any>(null);
+  const [conversionPaths, setConversionPaths] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'opening' | 'heatmap' | 'fans' | 'emotions' | 'whatsapp' | 'customers' | 'quote-reactions' | 'subscribers'>('overview');
   const [loading, setLoading] = useState(true);
+  const [showSettings, setShowSettings] = useState(false);
+  const [adminPhone, setAdminPhone] = useState('85268810677');
+  const [settingsMsg, setSettingsMsg] = useState('');
+
+  // Debug: global click tracking
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      console.log('[Analytics] Global click on:', target.tagName, target.className, target.textContent?.slice(0, 20));
+    };
+    document.addEventListener('click', handler, true);
+    return () => document.removeEventListener('click', handler, true);
+  }, []);
+
+  useEffect(() => {
+    fetchSetting('admin_phone').then((v) => {
+      if (v) setAdminPhone(v);
+    });
+  }, []);
 
   useEffect(() => {
     Promise.all([
       fetchAnalyticsSummary(),
       fetchSlideHeatmap(),
       fetchFanScores(),
-      fetchTimeline(30),
       fetchOpeningFunnel(),
-      fetchDeviceAnalytics(),
       fetchEngagementAnalytics(),
       fetchWhatsAppLeads(),
-    ]).then(([s, h, f, t, o, m, e, w]) => {
+      fetchConversionFunnel(),
+      fetchCardDownloads(),
+      fetchQuoteReactions(),
+      fetchSubscribers(),
+      fetchDropOff(),
+      fetchContentPerformance(),
+      fetchConversionPaths(),
+    ]).then(([s, h, f, o, e, w, cf, cd, qr, sub, dOff, cPerf, cPath]) => {
       setSummary(s);
       setHeatmap(h);
       setFanData(f);
-      setTimeline(t);
       setOpeningFunnel(o);
-      setDeviceAnalytics(m);
       setEngagement(e);
       setWhatsappData(w);
+      setConversionFunnel(cf);
+      setCardDownloads(cd);
+      setQuoteReactions(qr);
+      setSubscribers(sub);
+      setDropOff(dOff);
+      setContentPerf(cPerf);
+      setConversionPaths(cPath);
+      if (w?.customers) setCustomers(w.customers);
       setLoading(false);
     });
   }, []);
 
   const tabs = [
     { id: 'overview' as const, label: t('📊 總覽', '📊 总览') },
-    { id: 'opening' as const, label: t('🌅 Opening 漏斗', '🌅 Opening 漏斗') },
+    { id: 'opening' as const, label: t('🌅 開場漏斗', '🌅 开场漏斗') },
     { id: 'heatmap' as const, label: t('🔥 作品熱力', '🔥 作品热力') },
+    { id: 'quote-reactions' as const, label: t('📜 語錄反應', '📜 语录反应') },
     { id: 'fans' as const, label: t('❤️ 粉絲指數', '❤️ 粉丝指数') },
     { id: 'emotions' as const, label: t('🎨 情緒光譜', '🎨 情绪光谱') },
-    { id: 'achievements' as const, label: t('🏆 成就解鎖', '🏆 成就解锁') },
-    { id: 'timeline' as const, label: t('📈 趨勢', '📈 趋势') },
-    { id: 'device' as const, label: t('📱 裝置數據', '📱 装置数据') },
-    { id: 'whatsapp' as const, label: t('💬 WhatsApp 獲客', '💬 WhatsApp 获客') },
+    { id: 'whatsapp' as const, label: t('💬 卡片轉化', '💬 卡片转化') },
+    { id: 'subscribers' as const, label: t('🔔 訂閱用戶', '🔔 订阅用户') },
+    { id: 'customers' as const, label: t('👤 客戶詳情', '👤 客户详情') },
   ];
 
+  function getTabData() {
+    switch (activeTab) {
+      case 'overview': return summary;
+      case 'opening': return openingFunnel;
+      case 'heatmap': return heatmap;
+      case 'fans': return fanData;
+      case 'emotions': return engagement;
+      case 'whatsapp': return { ...whatsappData, conversionFunnel, cardDownloads };
+      case 'customers': return customers;
+      case 'quote-reactions': return quoteReactions;
+      case 'subscribers': return subscribers;
+      default: return null;
+    }
+  }
+
+  function exportData(format: 'csv' | 'json') {
+    const data = getTabData();
+    if (!data) return;
+
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+    const filename = `jamestyle-${activeTab}-${timestamp}.${format}`;
+
+    let blob: Blob;
+    if (format === 'json') {
+      blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    } else {
+      // Simple CSV conversion for arrays
+      const rows = Array.isArray(data) ? data : [data];
+      if (rows.length === 0) return;
+      const keys = Object.keys(rows[0]);
+      const csv = [
+        keys.join(','),
+        ...rows.map((row: any) => keys.map((k) => {
+          const v = row[k];
+          const str = v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v);
+          return '"' + str.replace(/"/g, '""') + '"';
+        }).join(',')),
+      ].join('\n');
+      blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    }
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   return (
-    <div className="fixed inset-0 bg-james-dark text-warm-light overflow-y-auto">
+    <div className="fixed inset-0 z-[70] bg-james-dark text-warm-light overflow-y-auto">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-james-dark/95 backdrop-blur-sm border-b border-warm-gold/10">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -117,12 +216,37 @@ export default function AnalyticsDashboard({ onClose }: Props) {
             <h1 className="text-lg text-warm-gold tracking-wider">{t('🔬 阿占數據實驗室', '🔬 阿占数据实验室')}</h1>
             <p className="text-xs text-cream/60 mt-0.5">Data Science Dashboard</p>
           </div>
-          <button
-            onClick={onClose}
-            className="text-warm-light/50 hover:text-warm-light text-sm px-3 py-1 border border-warm-light/20 rounded"
-          >
-            {t('✕ 關閉', '✕ 关闭')}
-          </button>
+          <div className="flex items-center gap-2">
+            <div
+              onClick={() => {
+                console.log('[Analytics] Settings clicked!');
+                setShowSettings(true);
+              }}
+              className="bg-red-600 text-white text-xs px-3 py-1.5 rounded cursor-pointer select-none"
+            >
+              {t('設置', '设置')}
+            </div>
+            <button
+              onClick={() => exportData('json')}
+              className="text-warm-light/50 hover:text-warm-light text-sm px-3 py-1 border border-warm-light/20 rounded"
+              title={t('導出 JSON', '导出 JSON')}
+            >
+              📥 JSON
+            </button>
+            <button
+              onClick={() => exportData('csv')}
+              className="text-warm-light/50 hover:text-warm-light text-sm px-3 py-1 border border-warm-light/20 rounded"
+              title={t('導出 CSV', '导出 CSV')}
+            >
+              📥 CSV
+            </button>
+            <button
+              onClick={onClose}
+              className="text-warm-light/50 hover:text-warm-light text-sm px-3 py-1 border border-warm-light/20 rounded"
+            >
+              {t('✕ 關閉', '✕ 关闭')}
+            </button>
+          </div>
         </div>
 
         {/* Tab bar */}
@@ -165,19 +289,70 @@ export default function AnalyticsDashboard({ onClose }: Props) {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              {activeTab === 'overview' && <OverviewTab summary={summary} engagement={engagement} lang={lang} />}
+              {activeTab === 'overview' && <OverviewTab summary={summary} engagement={engagement} dropOff={dropOff} contentPerf={contentPerf} conversionPaths={conversionPaths} lang={lang} />}
               {activeTab === 'opening' && <OpeningFunnelTab funnel={openingFunnel} lang={lang} />}
               {activeTab === 'heatmap' && <HeatmapTab heatmap={heatmap} lang={lang} />}
               {activeTab === 'fans' && <FansTab fanData={fanData} lang={lang} />}
               {activeTab === 'emotions' && <EmotionSpectrumTab engagement={engagement} lang={lang} />}
-              {activeTab === 'achievements' && <AchievementsTab engagement={engagement} lang={lang} />}
-              {activeTab === 'timeline' && <TimelineTab timeline={timeline} lang={lang} />}
-              {activeTab === 'device' && <DeviceTab device={deviceAnalytics} lang={lang} />}
-              {activeTab === 'whatsapp' && <WhatsappLeadsTab data={whatsappData} lang={lang} />}
+              {activeTab === 'whatsapp' && <WhatsappLeadsTab data={whatsappData} conversionFunnel={conversionFunnel} cardDownloads={cardDownloads} lang={lang} />}
+              {activeTab === 'quote-reactions' && <QuoteReactionsTab data={quoteReactions} lang={lang} />}
+              {activeTab === 'subscribers' && <SubscribersTab data={subscribers} lang={lang} />}
+              {activeTab === 'customers' && <CustomersTab customers={customers} customerJourney={customerJourney} setCustomerJourney={setCustomerJourney} lang={lang} />}
             </motion.div>
           </AnimatePresence>
         )}
       </div>
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={() => setShowSettings(false)}
+        >
+          <div
+            className="bg-james-dark border border-warm-gold/20 rounded-2xl p-6 w-80 max-w-[90vw]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-sm text-warm-gold tracking-wider mb-4">{t('⚙️ 系統設置', '⚙️ 系统设置')}</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs text-cream/60 mb-1.5">{t('WhatsApp 客服號碼', 'WhatsApp 客服号码')}</label>
+                <input
+                  type="text"
+                  value={adminPhone}
+                  onChange={(e) => setAdminPhone(e.target.value.replace(/\D/g, ''))}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-cream focus:outline-none focus:border-warm-gold/50"
+                  placeholder="852xxxxxxxx"
+                />
+                <p className="text-[10px] text-cream/40 mt-1">{t('格式：852 開頭，不需要 + 號', '格式：852 开头，不需要 + 号')}</p>
+              </div>
+              {settingsMsg && (
+                <div className={`text-xs text-center ${settingsMsg.includes('成功') || settingsMsg.includes('Success') ? 'text-green-400' : 'text-red-400'}`}>
+                  {settingsMsg}
+                </div>
+              )}
+              <div className="flex gap-2">
+                <button
+                  onClick={async () => {
+                    const ok = await updateSetting('admin_phone', adminPhone);
+                    setSettingsMsg(ok ? t('✅ 保存成功', '✅ 保存成功') : t('❌ 保存失敗', '❌ 保存失败'));
+                    setTimeout(() => setSettingsMsg(''), 3000);
+                  }}
+                  className="flex-1 bg-warm-gold/20 hover:bg-warm-gold/30 text-warm-gold text-sm py-2 rounded-lg transition-colors"
+                >
+                  {t('保存', '保存')}
+                </button>
+                <button
+                  onClick={() => setShowSettings(false)}
+                  className="flex-1 bg-white/5 hover:bg-white/10 text-cream/70 text-sm py-2 rounded-lg transition-colors"
+                >
+                  {t('取消', '取消')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -185,7 +360,7 @@ export default function AnalyticsDashboard({ onClose }: Props) {
 // ============================================================
 // TAB: 總覽
 // ============================================================
-function OverviewTab({ summary, engagement, lang }: { summary: any; engagement: any; lang: 'tc' | 'sc' }) {
+function OverviewTab({ summary, engagement, dropOff, contentPerf, conversionPaths, lang }: { summary: any; engagement: any; dropOff: any; contentPerf: any; conversionPaths: any; lang: 'tc' | 'sc' }) {
   const t = (tc: string, sc: string) => lang === 'sc' ? sc : tc;
   if (!summary) return <EmptyState lang={lang} />;
 
@@ -201,6 +376,8 @@ function OverviewTab({ summary, engagement, lang }: { summary: any; engagement: 
   const engagementStats = engagement ? [
     { label: t('聲音開啟率', '声音开启率'), value: `${engagement.soundToggle?.rate || 0}%`, emoji: '🔊', color: 'text-yellow-400' },
     { label: t('拼貼生成數', '拼贴生成数'), value: engagement.collageCount || 0, emoji: '🖼️', color: 'text-emerald-400' },
+    { label: t('WhatsApp分享', 'WhatsApp分享'), value: engagement.whatsappShareCount || 0, emoji: '💬', color: 'text-green-400' },
+    { label: t('語錄瀏覽', '语录浏览'), value: engagement.galleryPageViewCount || 0, emoji: '👁️', color: 'text-blue-400' },
     { label: t('平均每場成就', '平均每场成就'), value: engagement.achievementSummary?.avgPerAllSessions || '0.00', emoji: '🏆', color: 'text-amber-400' },
   ] : [];
 
@@ -292,7 +469,7 @@ function OverviewTab({ summary, engagement, lang }: { summary: any; engagement: 
                 <span className="text-lg">{medals[i]}</span>
                 <div className="flex-1 min-w-0">
                   <div className="text-xs text-cream/80 truncate mb-1">
-                    #{s.slideId} {slide?.emoji} {slide?.caption.tc.slice(0, 20)}...
+                    #{s.slideId} {slide?.emoji} {slide?.title[lang]}
                   </div>
                   <Bar value={s.count} max={maxCount} color="bg-warm-gold" />
                 </div>
@@ -303,14 +480,113 @@ function OverviewTab({ summary, engagement, lang }: { summary: any; engagement: 
         </div>
       </div>
 
-      {/* Data Scientist Insights */}
+      {/* Key Insights */}
       <div className="bg-gradient-to-br from-james-orange/10 to-warm-gold/10 rounded-xl p-5 border border-james-orange/20">
-        <h3 className="text-sm text-james-orange tracking-wider mb-3">{t('🔬 數據科學家洞察', '🔬 数据科学家洞察')}</h3>
-        <div className="space-y-2 text-xs text-cream/90 leading-relaxed">
-          <p>📌 <strong className="text-warm-light/90">{t('完成率', '完成率')} {summary.completionRate}%</strong> — {Number(summary.completionRate) > 50 ? t('超過半數訪客看完全部作品，說明內容吸引力強勁', '超过半数访客看完全部作品，说明内容吸引力强劲') : t('大部分訪客未看完，建議優化前幾張作品的吸引力', '大部分访客未看完，建议优化前几张作品的吸引力')}</p>
-          <p>📌 <strong className="text-warm-light/90">{t('平均瀏覽到第', '平均浏览到第')} {summary.avgMaxSlide} {t('張', '张')}</strong> — {Number(summary.avgMaxSlide) > 10 ? t('訪客深度參與，大多數人會看完大部分作品', '访客深度参与，大多数人会看完大部分作品') : `${t('第', '第')} ${Math.ceil(Number(summary.avgMaxSlide))} ${t('張前後是關鍵流失點', '张前后是关键流失点')}`}</p>
+        <h3 className="text-sm text-james-orange tracking-wider mb-3">{t('🧠 關鍵洞見', '🧠 关键洞见')}</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <InsightCard
+            emoji={Number(summary.completionRate) > 50 ? '✅' : '⚠️'}
+            title={t('完成率', '完成率') + ' ' + summary.completionRate + '%'}
+            action={Number(summary.completionRate) > 50
+              ? t('內容吸引力強勁，可考慮增加新作品', '内容吸引力强劲，可考虑增加新作品')
+              : t('建議優化前 3 張作品，降低流失率', '建议优化前 3 张作品，降低流失率')}
+          />
+          <InsightCard
+            emoji={Number(summary.avgMaxSlide) > 10 ? '🎯' : '🔻'}
+            title={t('平均瀏覽到第', '平均浏览到第') + ' ' + summary.avgMaxSlide + t('張', '张')}
+            action={Number(summary.avgMaxSlide) > 10
+              ? t('用戶參與度深，適合在中段插入轉化 CTA', '用户参与度深，适合在中段插入转化 CTA')
+              : t('第', '第') + ' ' + Math.ceil(Number(summary.avgMaxSlide)) + ' ' + t('張是流失關口，需強化內容', '张是流失关口，需强化内容')}
+          />
+          <InsightCard
+            emoji={summary.topSlides?.[0] ? '🔥' : '📭'}
+            title={t('最熱作品', '最热作品') + ': #' + (summary.topSlides?.[0]?.slideId || '-')}
+            action={t('可複製該作品風格製作新內容', '可复制该作品风格制作新内容')}
+          />
+          <InsightCard
+            emoji={summary.deviceDistribution?.find((d: any) => d.deviceType === 'mobile')?.count > (summary.totalSessions * 0.6) ? '📱' : '🖥️'}
+            title={t('主力裝置', '主力装置')}
+            action={summary.deviceDistribution?.find((d: any) => d.deviceType === 'mobile')?.count > (summary.totalSessions * 0.6)
+              ? t('超過 60% 用戶用手機，確保移動端體驗流暢', '超过 60% 用户用手机，确保移动端体验流畅')
+              : t('桌面用戶比例高，可考慮更豐富的視覺呈現', '桌面用户比例高，可考虑更丰富的视觉呈现')}
+          />
         </div>
       </div>
+
+      {/* Drop-off Alert */}
+      {dropOff?.worstDropOff && (
+        <div className="bg-gradient-to-br from-red-500/10 to-orange-500/10 rounded-xl p-5 border border-red-500/20">
+          <h3 className="text-sm text-red-400 tracking-wider mb-3">{t('⚠️ 流失警報', '⚠️ 流失警报')}</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <InsightCard
+              emoji="🔻"
+              title={t('第', '第') + dropOff.worstDropOff.slideId + t('張作品流失最嚴重', '张作品流失最严重')}
+              action={t('流失率', '流失率') + ' ' + dropOff.worstDropOff.dropOffRate + '% — ' + t('建議強化此作品內容或互動設計', '建议强化此作品内容或互动设计')}
+            />
+            {(dropOff.dropOffs || []).slice(0, 5).map((d: any) => (
+              <div key={d.slideId} className="bg-white/5 rounded-lg p-3 border border-white/5">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-cream/80">{t('第', '第')}{d.slideId}{t('張 → 第', '张 → 第')}{d.slideId + 1}{t('張', '张')}</span>
+                  <span className="text-xs text-red-400 font-bold">-{d.dropOffRate}%</span>
+                </div>
+                <Bar value={Number(d.dropOffRate)} max={100} color="bg-red-400" />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Content Performance */}
+      {contentPerf?.slides && contentPerf.slides.length > 0 && (
+        <div className="bg-white/5 rounded-xl p-5 border border-white/5">
+          <h3 className="text-sm text-warm-gold tracking-wider mb-4">{t('🎯 內容效果對比', '🎯 内容效果对比')}</h3>
+          <div className="space-y-3">
+            {contentPerf.slides
+              .sort((a: any, b: any) => Number(b.reactionRate) - Number(a.reactionRate))
+              .slice(0, 5)
+              .map((s: any, i: number) => {
+                const slide = SLIDES.find((sl) => sl.id === s.slideId);
+                return (
+                  <div key={s.slideId} className="flex items-center gap-3 py-2 border-b border-white/5 last:border-0">
+                    <span className="text-lg">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '•'}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs text-cream/80 truncate">#{s.slideId} {slide?.emoji} {slide?.title[lang]}</div>
+                      <div className="flex gap-3 mt-1">
+                        <span className="text-[10px] text-pink-400">{t('反應率', '反应率')} {s.reactionRate}%</span>
+                        <span className="text-[10px] text-green-400">{t('分享率', '分享率')} {s.shareRate}%</span>
+                        <span className="text-[10px] text-cream/40">{s.views}{t('次瀏覽', '次浏览')}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
+
+      {/* Conversion Paths */}
+      {conversionPaths && (
+        <div className="bg-white/5 rounded-xl p-5 border border-white/5">
+          <h3 className="text-sm text-warm-gold tracking-wider mb-4">{t('🛣️ 轉化路徑', '🛣️ 转化路径')}</h3>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-white/5 rounded-lg p-3 border border-white/5 text-center">
+              <div className="text-2xl">👀→💬</div>
+              <div className="text-xl font-bold text-pink-400">{conversionPaths.viewToReaction || 0}%</div>
+              <div className="text-[10px] text-cream/60 mt-1">{t('瀏覽後反應轉化', '浏览后反应转化')}</div>
+            </div>
+            <div className="bg-white/5 rounded-lg p-3 border border-white/5 text-center">
+              <div className="text-2xl">💬→📱</div>
+              <div className="text-xl font-bold text-green-400">{conversionPaths.reactionToWhatsApp || 0}%</div>
+              <div className="text-[10px] text-cream/60 mt-1">{t('反應後 WhatsApp 轉化', '反应后 WhatsApp 转化')}</div>
+            </div>
+            <div className="bg-white/5 rounded-lg p-3 border border-white/5 text-center">
+              <div className="text-2xl">🏁→📱</div>
+              <div className="text-xl font-bold text-warm-gold">{conversionPaths.completeToWhatsApp || 0}%</div>
+              <div className="text-[10px] text-cream/60 mt-1">{t('看完後 WhatsApp 轉化', '看完后 WhatsApp 转化')}</div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -387,7 +663,7 @@ function HeatmapTab({ heatmap, lang }: { heatmap: any; lang: 'tc' | 'sc' }) {
                     🔥 {heatScore.toFixed(0)}
                   </span>
                 </div>
-                <p className="text-xs text-warm-light/50 truncate">{s.caption.tc}</p>
+                <p className="text-xs text-warm-light/50 truncate">{s.title[lang]}</p>
               </div>
             </div>
 
@@ -576,7 +852,7 @@ function EmotionSpectrumTab({ engagement, lang }: { engagement: any; lang: 'tc' 
             <div className="flex items-center gap-2 mb-3">
               <span className="text-lg">{slide.emoji}</span>
               <span className="text-sm text-warm-gold">#{slide.id}</span>
-              <span className="text-xs text-cream/60 truncate flex-1">{slide.caption.tc.slice(0, 25)}...</span>
+              <span className="text-xs text-cream/60 truncate flex-1">{slide.title[lang]}</span>
               <span className="text-xs text-cream/50">{totalVotes} {t('票', '票')}</span>
             </div>
 
@@ -954,7 +1230,7 @@ function DeviceTab({ device, lang }: { device: any; lang: 'tc' | 'sc' }) {
 // ============================================================
 // TAB: WhatsApp 獲客
 // ============================================================
-function WhatsappLeadsTab({ data, lang }: { data: any; lang: 'tc' | 'sc' }) {
+function WhatsappLeadsTab({ data, conversionFunnel, cardDownloads, lang }: { data: any; conversionFunnel: any; cardDownloads: any; lang: 'tc' | 'sc' }) {
   const t = (tc: string, sc: string) => lang === 'sc' ? sc : tc;
   if (!data) return <EmptyState lang={lang} />;
 
@@ -964,6 +1240,13 @@ function WhatsappLeadsTab({ data, lang }: { data: any; lang: 'tc' | 'sc' }) {
   const conversionRate = data.conversionRate || '0.0';
   const topSlides = data.topSlides || [];
   const recentLeads = data.recentLeads || [];
+
+  const funnelSteps = conversionFunnel?.steps || [];
+  const hasFunnel = funnelSteps.length > 0;
+
+  const totalDownloads = cardDownloads?.totalDownloads || 0;
+  const downloadRate = cardDownloads?.downloadRate || '0.0';
+  const topDownloadedSlides = cardDownloads?.topSlides || [];
 
   return (
     <div className="space-y-6">
@@ -1010,6 +1293,75 @@ function WhatsappLeadsTab({ data, lang }: { data: any; lang: 'tc' | 'sc' }) {
         </motion.div>
       </div>
 
+      {/* 6-Step Conversion Funnel */}
+      {hasFunnel && (
+        <div className="bg-gradient-to-br from-james-orange/10 to-warm-gold/10 rounded-xl p-5 border border-james-orange/20">
+          <h3 className="text-sm text-james-orange tracking-wider mb-4">{t('🌅 六步轉化漏斗', '🌅 六步转化漏斗')}</h3>
+          <div className="space-y-3">
+            {funnelSteps.map((step: any, i: number) => {
+              const prevCount = i === 0 ? step.count : funnelSteps[i - 1].count;
+              const conversion = prevCount > 0 ? ((step.count / prevCount) * 100).toFixed(1) : '0.0';
+              const maxCount = Math.max(...funnelSteps.map((s: any) => s.count), 1);
+              return (
+                <div key={step.name} className="flex items-center gap-3">
+                  <span className="text-lg">{step.emoji}</span>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-cream/80">{step.label}</span>
+                      <span className="text-xs text-warm-gold">{step.count} ({i > 0 ? `${conversion}%` : '100%'})</span>
+                    </div>
+                    <Bar value={step.count} max={maxCount} color="bg-james-orange" />
+                    {i > 0 && (
+                      <div className="text-[10px] text-cream/50 mt-0.5">
+                        {t('步驟轉化', '步骤转化')}: {conversion}%
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+        </div>
+      </div>
+    )}
+
+      {/* Download Statistics */}
+      {cardDownloads && (
+        <div className="bg-white/5 rounded-xl p-5 border border-white/5">
+          <h3 className="text-sm text-warm-gold tracking-wider mb-4">{t('⬇️ 下載統計', '⬇️ 下载统计')}</h3>
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-warm-gold">{totalDownloads}</div>
+              <div className="text-xs text-cream/60">{t('總下載數', '总下载数')}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-pink-400">{downloadRate}%</div>
+              <div className="text-xs text-cream/60">{t('下載率', '下载率')}</div>
+            </div>
+          </div>
+          {topDownloadedSlides.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="text-xs text-cream/60 mb-2">{t('🔥 熱門下載作品', '🔥 热门下载作品')}</h4>
+              {topDownloadedSlides.map((s: any, i: number) => {
+                const slide = SLIDES.find((sl) => sl.id === s.slideId);
+                const maxCount = topDownloadedSlides[0]?.count || 1;
+                return (
+                  <div key={s.slideId} className="flex items-center gap-3">
+                    <span className="text-sm text-cream/50 w-6">#{i + 1}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs text-cream/80 truncate mb-1">
+                        {slide?.emoji} {slide?.title[lang]}
+                      </div>
+                      <Bar value={s.count} max={maxCount} color="bg-purple-400" />
+                    </div>
+                    <span className="text-sm text-warm-gold w-10 text-right">{s.count}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Top Shared Slides */}
       <div className="bg-white/5 rounded-xl p-5 border border-white/5">
         <h3 className="text-sm text-warm-gold tracking-wider mb-4">{t('🔥 熱門分享作品 TOP 5', '🔥 热门分享作品 TOP 5')}</h3>
@@ -1026,7 +1378,7 @@ function WhatsappLeadsTab({ data, lang }: { data: any; lang: 'tc' | 'sc' }) {
                   <span className="text-lg">{medals[i]}</span>
                   <div className="flex-1 min-w-0">
                     <div className="text-xs text-cream/80 truncate mb-1">
-                      #{s.slideId} {slide?.emoji} {slide?.caption.tc.slice(0, 20)}...
+                      #{s.slideId} {slide?.emoji} {slide?.title[lang]}
                     </div>
                     <Bar value={s.count} max={maxCount} color="bg-green-400" />
                   </div>
@@ -1075,6 +1427,330 @@ function WhatsappLeadsTab({ data, lang }: { data: any; lang: 'tc' | 'sc' }) {
           <p>{t('📌 熱門分享作品反映用戶最願意主動傳播的內容，可作為社群營銷的重點素材', '📌 热门分享作品反映用户最愿意主动传播的内容，可作为社群营销的重点素材')}</p>
           <p>{t('📌 轉化率 = 已完成分享 / 總分享請求，低轉化率可能意味用戶在 WhatsApp 中未點擊發送', '📌 转化率 = 已完成分享 / 总分享请求，低转化率可能意味着用户在 WhatsApp 中未点击发送')}</p>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// TAB: 客戶詳情
+// ============================================================
+function CustomersTab({ customers, customerJourney, setCustomerJourney, lang }: { customers: any[]; customerJourney: any; setCustomerJourney: (j: any) => void; lang: 'tc' | 'sc' }) {
+  console.log('[CustomersTab] render, customers type:', typeof customers, 'isArray:', Array.isArray(customers), 'length:', customers?.length);
+  const t = (tc: string, sc: string) => lang === 'sc' ? sc : tc;
+  const [selectedPhone, setSelectedPhone] = useState<string | null>(null);
+  const [loadingJourney, setLoadingJourney] = useState(false);
+
+  // Safety: ensure customers is a valid array of objects
+  const safeCustomers = Array.isArray(customers)
+    ? customers.filter((c) => c != null && typeof c === 'object')
+    : [];
+
+  function formatPhone(phone: string): string {
+    if (!phone) return '';
+    return '+' + phone;
+  }
+
+  async function handleSelectCustomer(phone: string) {
+    setSelectedPhone(phone);
+    setLoadingJourney(true);
+    const journey = await fetchCustomerJourney(phone);
+    setCustomerJourney(journey);
+    setLoadingJourney(false);
+  }
+
+  function handleCloseDetail() {
+    setSelectedPhone(null);
+    setCustomerJourney(null);
+  }
+
+  const eventIcon: Record<string, string> = {
+    slide_view: '👁️',
+    reaction: '💬',
+    card_share_request: '📤',
+    card_download: '⬇️',
+  };
+
+  const eventLabel: Record<string, [string, string]> = {
+    slide_view: ['瀏覽作品', '浏览作品'],
+    reaction: ['點擊反應', '点击反应'],
+    card_share_request: ['分享請求', '分享请求'],
+    card_download: ['下載卡片', '下载卡片'],
+  };
+
+  return (
+    <div className="space-y-6">
+      {selectedPhone ? (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm text-warm-gold tracking-wider">{t('👤 客戶詳情', '👤 客户详情')}</h3>
+            <button
+              onClick={handleCloseDetail}
+              className="text-xs text-cream/60 hover:text-cream px-3 py-1 border border-warm-light/20 rounded"
+            >
+              {t('← 返回列表', '← 返回列表')}
+            </button>
+          </div>
+
+          {/* Customer Info */}
+          {customerJourney?.customer && (
+            <div className="bg-white/5 rounded-xl p-4 border border-white/5">
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <span className="text-cream/50">{t('電話', '电话')}</span>
+                  <p className="text-warm-light font-mono mt-0.5">{formatPhone(customerJourney.customer.phone)}</p>
+                </div>
+                <div>
+                  <span className="text-cream/50">{t('來源', '来源')}</span>
+                  <p className="text-warm-light mt-0.5">{customerJourney.customer.source || 'WhatsApp'}</p>
+                </div>
+                <div>
+                  <span className="text-cream/50">{t('首次聯繫', '首次联系')}</span>
+                  <p className="text-warm-light mt-0.5">{formatDate(customerJourney.customer.firstContactAt)}</p>
+                </div>
+                <div>
+                  <span className="text-cream/50">{t('狀態', '状态')}</span>
+                  <p className="text-warm-light mt-0.5">{customerJourney.customer.status || t('活躍', '活跃')}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Behavior Timeline */}
+          <div className="bg-white/5 rounded-xl p-4 border border-white/5">
+            <h4 className="text-xs text-warm-gold tracking-wider mb-3">{t('📈 行為時間線', '📈 行为时间线')}</h4>
+            {loadingJourney ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="text-2xl animate-spin">🔬</div>
+              </div>
+            ) : !customerJourney?.events || customerJourney.events.length === 0 ? (
+              <p className="text-xs text-cream/50 text-center py-4">{t('暫無行為記錄', '暂无行为记录')}</p>
+            ) : (
+              <div className="space-y-3">
+                {(customerJourney.events || []).map((evt: any, i: number) => (
+                  <div
+                    key={i}
+                    className="flex items-start gap-3 py-2 border-b border-white/5 last:border-0"
+                    style={{ animationDelay: `${i * 40}ms` }}
+                  >
+                    <span className="text-lg shrink-0">{eventIcon[evt.eventType] || '📌'}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-cream/80">
+                          {(eventLabel[evt.eventType] || [evt.eventType, evt.eventType])[lang === 'sc' ? 1 : 0]}
+                          {evt.slideId ? ` #${evt.slideId}` : ''}
+                        </span>
+                        <span className="text-[10px] text-cream/40 shrink-0 ml-2">{formatDate(evt.createdAt)}</span>
+                      </div>
+                      {evt.eventData && (
+                        <p className="text-[10px] text-cream/40 mt-0.5 truncate">
+                          {typeof evt.eventData === 'string' ? evt.eventData : JSON.stringify(evt.eventData)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-xl p-4 border border-blue-500/20">
+            <h3 className="text-sm text-blue-400 tracking-wider mb-2">{t('👤 客戶列表', '👤 客户列表')}</h3>
+            <p className="text-xs text-cream/70">{t('點擊客戶查看詳細行為時間線', '点击客户查看详细行为时间线')}</p>
+          </div>
+
+          {safeCustomers.length === 0 ? (
+            <EmptyState lang={lang} />
+          ) : (
+            <div className="bg-white/5 rounded-xl p-4 border border-white/5">
+              <div className="space-y-2">
+                {safeCustomers.map((c: any, i: number) => (
+                  <div
+                    key={c.phone || i}
+                    onClick={() => handleSelectCustomer(c.phone)}
+                    className="flex items-center justify-between py-3 px-3 border-b border-white/5 last:border-0 rounded hover:bg-white/5 cursor-pointer transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm">👤</span>
+                      <div>
+                        <div className="text-xs text-cream/80 font-mono">{formatPhone(c.phone)}</div>
+                        <div className="text-[10px] text-cream/40 mt-0.5">
+                          {t('瀏覽', '浏览')} {c.slidesViewed || 0} {t('張', '张')} · {t('反應', '反应')} {c.reactionsCount || 0} {t('次', '次')}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[10px] text-cream/40">{formatDate(c.firstContactAt)}</div>
+                      <div className="text-[10px] text-warm-gold mt-0.5">{c.shareToken ? `🎫 ${c.shareToken}` : ''}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+// ============================================================
+// COMPONENT: Insight Card
+// ============================================================
+function InsightCard({ emoji, title, action }: { emoji: string; title: string; action: string }) {
+  return (
+    <div className="bg-white/5 rounded-lg p-3 border border-white/5">
+      <div className="flex items-center gap-2 mb-1">
+        <span className="text-lg">{emoji}</span>
+        <span className="text-sm font-bold text-cream/90">{title}</span>
+      </div>
+      <p className="text-[11px] text-cream/60 leading-relaxed">{action}</p>
+    </div>
+  );
+}
+
+// ============================================================
+// TAB: 語錄反應
+// ============================================================
+function QuoteReactionsTab({ data, lang }: { data: any; lang: 'tc' | 'sc' }) {
+  const t = (tc: string, sc: string) => lang === 'sc' ? sc : tc;
+  if (!data) return <EmptyState lang={lang} />;
+
+  const total = data.total || 0;
+  const byType = data.byType || [];
+  const topQuotes = data.topQuotes || [];
+
+  const typeEmojis: Record<string, string> = { like: '👍', love: '❤️', laugh: '😂', sad: '😢' };
+  const maxTypeCount = Math.max(...byType.map((r: any) => r.count), 1);
+
+  return (
+    <div className="space-y-6">
+      {/* Summary */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-white/5 rounded-xl p-4 border border-white/5 text-center">
+          <div className="text-2xl">💬</div>
+          <div className="text-xl font-bold text-warm-gold">{total}</div>
+          <div className="text-xs text-cream/60 mt-1">{t('語錄反應總數', '语录反应总数')}</div>
+        </div>
+        <div className="bg-white/5 rounded-xl p-4 border border-white/5 text-center">
+          <div className="text-2xl">📜</div>
+          <div className="text-xl font-bold text-warm-gold">{topQuotes.length}</div>
+          <div className="text-xs text-cream/60 mt-1">{t('有反應的語錄', '有反应的语录')}</div>
+        </div>
+      </div>
+
+      {/* Reaction Types */}
+      <div className="bg-white/5 rounded-xl p-5 border border-white/5">
+        <h3 className="text-sm text-warm-gold tracking-wider mb-4">{t('反應類型分佈', '反应类型分布')}</h3>
+        <div className="space-y-3">
+          {byType.map((r: any) => (
+            <div key={r.reactionType} className="flex items-center gap-3">
+              <span className="text-lg w-8">{typeEmojis[r.reactionType] || '📤'}</span>
+              <div className="flex-1">
+                <Bar value={r.count} max={maxTypeCount} color="bg-pink-400" />
+              </div>
+              <span className="text-sm text-cream/80 w-12 text-right">{r.count}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Top Quotes */}
+      <div className="bg-white/5 rounded-xl p-5 border border-white/5">
+        <h3 className="text-sm text-warm-gold tracking-wider mb-4">{t('🏆 最受歡迎語錄 TOP 10', '🏆 最受欢迎语录 TOP 10')}</h3>
+        <div className="space-y-3">
+          {topQuotes.map((q: any, i: number) => {
+            const maxCount = topQuotes[0]?.count || 1;
+            const bd = q.breakdown || {};
+            return (
+              <div key={q.quoteCode} className="flex items-start gap-3 py-2 border-b border-white/5 last:border-0">
+                <span className="text-sm text-cream/40 w-6">{i + 1}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs font-mono text-warm-gold">{q.quoteCode}</span>
+                    <span className="text-xs text-cream/60">
+                      {Object.entries(bd).map(([k, v]) => `${typeEmojis[k] || ''}${v}`).join(' ')}
+                    </span>
+                  </div>
+                  <Bar value={q.count} max={maxCount} color="bg-warm-gold" />
+                </div>
+                <span className="text-sm text-warm-gold w-10 text-right">{q.count}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// TAB: 訂閱用戶
+// ============================================================
+function SubscribersTab({ data, lang }: { data: any; lang: 'tc' | 'sc' }) {
+  const t = (tc: string, sc: string) => lang === 'sc' ? sc : tc;
+  if (!data) return <EmptyState lang={lang} />;
+
+  const total = data.total || 0;
+  const byStatus = data.byStatus || [];
+  const recent = data.recent || [];
+
+  const statusLabels: Record<string, string> = {
+    confirmed: t('已確認', '已确认'),
+    requested: t('待確認', '待确认'),
+    pending: t('待處理', '待处理'),
+  };
+  const statusColors: Record<string, string> = {
+    confirmed: 'text-green-400',
+    requested: 'text-yellow-400',
+    pending: 'text-gray-400',
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Summary */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="bg-white/5 rounded-xl p-4 border border-white/5 text-center">
+          <div className="text-2xl">🔔</div>
+          <div className="text-xl font-bold text-warm-gold">{total}</div>
+          <div className="text-xs text-cream/60 mt-1">{t('訂閱總數', '订阅总数')}</div>
+        </div>
+        {byStatus.map((s: any) => (
+          <div key={s.status} className="bg-white/5 rounded-xl p-4 border border-white/5 text-center">
+            <div className="text-2xl">{s.status === 'confirmed' ? '✅' : s.status === 'requested' ? '⏳' : '📝'}</div>
+            <div className={`text-xl font-bold ${statusColors[s.status] || 'text-cream/80'}`}>{s.count}</div>
+            <div className="text-xs text-cream/60 mt-1">{statusLabels[s.status] || s.status}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Recent Subscribers */}
+      <div className="bg-white/5 rounded-xl p-5 border border-white/5">
+        <h3 className="text-sm text-warm-gold tracking-wider mb-4">{t('最近訂閱', '最近订阅')}</h3>
+        {recent.length === 0 ? (
+          <p className="text-xs text-cream/50 text-center py-4">{t('暫無訂閱記錄', '暂无订阅记录')}</p>
+        ) : (
+          <div className="space-y-2">
+            {recent.map((s: any) => (
+              <div key={s.id} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm">{s.status === 'confirmed' ? '✅' : '⏳'}</span>
+                  <div>
+                    <div className="text-xs text-cream/80 font-mono">{s.phone || t('未填電話', '未填电话')}</div>
+                    {s.sourceCode && <div className="text-[10px] text-warm-gold">{t('來源', '来源')}: {s.sourceCode}</div>}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-[10px] text-cream/40">{formatDate(s.createdAt)}</div>
+                  <div className={`text-[10px] ${statusColors[s.status] || 'text-cream/60'}`}>{statusLabels[s.status] || s.status}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
