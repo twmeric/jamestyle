@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { useAppStore } from '../store/appStore';
+import { trackEventImmediate } from '../api/reactionsApi';
 
 export default function EndingScreen() {
   const { lang, setPhase, setCurrentSlide, favorites } = useAppStore();
@@ -12,11 +13,17 @@ export default function EndingScreen() {
   // 2026-10-26 改版：IP showcase 定位——品牌合作洽詢直達阿Bot 線（85262322466）
   // 「索取阿占卡片」消費者入口已退役（CollageGenerator 保留檔案作復活點）
   const handleCollab = () => {
+    trackEventImmediate('collab_cta_click', undefined, { lang });
     const text =
       lang === 'tc'
         ? '你好，我對阿占隨意（JameStyle）嘅 IP 品牌合作／Crossover 有興趣，想了解合作方式。'
         : '你好，我对阿占随意（JameStyle）的 IP 品牌合作／Crossover 有兴趣，想了解合作方式。';
     window.open(`https://wa.me/85262322466?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const handleReplayTracked = () => {
+    trackEventImmediate('ending_replay_click', undefined, { lang });
+    handleReplay();
   };
 
   return (
@@ -136,7 +143,7 @@ export default function EndingScreen() {
           <motion.button
             className="w-full py-5 text-sm tracking-[3px] text-warm-gold/60 border border-warm-gold/15 rounded-xl uppercase transition-all duration-300 hover:text-warm-gold/80 hover:border-warm-gold/25"
             whileTap={{ scale: 0.97 }}
-            onClick={handleReplay}
+            onClick={handleReplayTracked}
           >
             🔄 {lang === 'tc' ? '再睇一次' : '再看一次'}
           </motion.button>
