@@ -88,7 +88,7 @@ export default function AnalyticsDashboard({ onClose }: Props) {
   const [dropOff, setDropOff] = useState<any>(null);
   const [contentPerf, setContentPerf] = useState<any>(null);
   const [conversionPaths, setConversionPaths] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'opening' | 'heatmap' | 'fans' | 'emotions' | 'whatsapp' | 'customers' | 'quote-reactions' | 'subscribers'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'opening' | 'heatmap' | 'fans' | 'emotions' | 'customers' | 'quote-reactions'>('overview');
   const [loading, setLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [adminPhone, setAdminPhone] = useState('85262322466');
@@ -151,8 +151,6 @@ export default function AnalyticsDashboard({ onClose }: Props) {
     { id: 'quote-reactions' as const, label: t('📜 語錄反應', '📜 语录反应') },
     { id: 'fans' as const, label: t('❤️ 粉絲指數', '❤️ 粉丝指数') },
     { id: 'emotions' as const, label: t('🎨 情緒光譜', '🎨 情绪光谱') },
-    { id: 'whatsapp' as const, label: t('💬 卡片轉化', '💬 卡片转化') },
-    { id: 'subscribers' as const, label: t('🔔 訂閱用戶', '🔔 订阅用户') },
     { id: 'customers' as const, label: t('👤 客戶詳情', '👤 客户详情') },
   ];
 
@@ -163,10 +161,8 @@ export default function AnalyticsDashboard({ onClose }: Props) {
       case 'heatmap': return heatmap;
       case 'fans': return fanData;
       case 'emotions': return engagement;
-      case 'whatsapp': return { ...whatsappData, conversionFunnel, cardDownloads };
       case 'customers': return customers;
       case 'quote-reactions': return quoteReactions;
-      case 'subscribers': return subscribers;
       default: return null;
     }
   }
@@ -294,9 +290,7 @@ export default function AnalyticsDashboard({ onClose }: Props) {
               {activeTab === 'heatmap' && <HeatmapTab heatmap={heatmap} lang={lang} />}
               {activeTab === 'fans' && <FansTab fanData={fanData} lang={lang} />}
               {activeTab === 'emotions' && <EmotionSpectrumTab engagement={engagement} lang={lang} />}
-              {activeTab === 'whatsapp' && <WhatsappLeadsTab data={whatsappData} conversionFunnel={conversionFunnel} cardDownloads={cardDownloads} lang={lang} />}
               {activeTab === 'quote-reactions' && <QuoteReactionsTab data={quoteReactions} lang={lang} />}
-              {activeTab === 'subscribers' && <SubscribersTab data={subscribers} lang={lang} />}
               {activeTab === 'customers' && <CustomersTab customers={customers} customerJourney={customerJourney} setCustomerJourney={setCustomerJourney} lang={lang} />}
             </motion.div>
           </AnimatePresence>

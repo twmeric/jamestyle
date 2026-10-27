@@ -1,9 +1,11 @@
 import { motion } from 'framer-motion';
+import { useState } from 'react';
 import { useAppStore } from '../store/appStore';
-import { trackEventImmediate } from '../api/reactionsApi';
+import { trackEventImmediate, getSessionId } from '../api/reactionsApi';
 
 export default function EndingScreen() {
   const { lang, setPhase, setCurrentSlide, favorites } = useAppStore();
+  const [mood, setMood] = useState<string | null>(null);
 
   const handleReplay = () => {
     setCurrentSlide(0);
@@ -12,18 +14,27 @@ export default function EndingScreen() {
 
   // 2026-10-26 改版：IP showcase 定位——品牌合作洽詢直達阿Bot 線（85262322466）
   // 「索取阿占卡片」消費者入口已退役（CollageGenerator 保留檔案作復活點）
+  // 預填尾帶 (JXxxxx) session 短碼：阿Bot 側對話可對返網站訪客行為（跨系統歸因）
   const handleCollab = () => {
-    trackEventImmediate('collab_cta_click', undefined, { lang });
+    const shortCode = 'JX' + getSessionId().replace(/-/g, '').slice(0, 4).toUpperCase();
+    trackEventImmediate('collab_cta_click', undefined, { lang, shortCode });
     const text =
       lang === 'tc'
-        ? '你好，我對阿占隨意（JameStyle）嘅 IP 品牌合作／Crossover 有興趣，想了解合作方式。'
-        : '你好，我对阿占随意（JameStyle）的 IP 品牌合作／Crossover 有兴趣，想了解合作方式。';
+        ? `你好，我對阿占隨意（JameStyle）嘅 IP 品牌合作／Crossover 有興趣，想了解合作方式。（${shortCode}）`
+        : `你好，我对阿占随意（JameStyle）的 IP 品牌合作／Crossover 有兴趣，想了解合作方式。（${shortCode}）`;
     window.open(`https://wa.me/85262322466?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   const handleReplayTracked = () => {
     trackEventImmediate('ending_replay_click', undefined, { lang });
     handleReplay();
+  };
+
+  // 結尾情緒反饋（一鍵三 emoji）——「睇完場 show 感覺如何」
+  const handleMood = (m: string) => {
+    if (mood) return;
+    setMood(m);
+    trackEventImmediate('ending_mood', undefined, { lang, mood: m });
   };
 
   return (
@@ -122,6 +133,40 @@ export default function EndingScreen() {
           animate={{ scaleX: 1 }}
           transition={{ delay: 1, duration: 0.8 }}
         />
+
+        {/* Mood feedback（一鍵三 emoji） */}
+        <motion.div
+          className="flex items-center justify-center gap-4 mb-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.2 }}
+        >
+          {mood ? (
+            <p className="text-warm-gold/70 text-sm tracking-[2px]">
+              {lang === 'tc' ? '多謝你嘅感受 ✨' : '谢谢你的感受 ✨'}
+            </p>
+          ) : (
+            <>
+              <span className="text-warm-light/40 text-[10px] tracking-[3px] uppercase">
+                {lang === 'tc' ? '睇完感覺' : '看完感觉'}
+              </span>
+              {[
+                { m: 'delight', e: '🥰' },
+                { m: 'amused', e: '😄' },
+                { m: 'curious', e: '🤔' },
+              ].map(({ m, e }) => (
+                <button
+                  key={m}
+                  onClick={() => handleMood(m)}
+                  className="w-11 h-11 rounded-full border border-warm-gold/15 bg-white/[0.02] text-xl hover:border-warm-gold/40 hover:scale-110 transition-all"
+                  aria-label={m}
+                >
+                  {e}
+                </button>
+              ))}
+            </>
+          )}
+        </motion.div>
 
         {/* CTA Buttons */}
         <motion.div
