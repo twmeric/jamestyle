@@ -734,7 +734,7 @@ app.post("/api/public/card-share/request", async (c) => {
   const cardUrl = `https://jamestyle.com/dl/${shareToken}`;
   // Read admin phone from settings, fallback to env or default
   const settingsRow = await db.select().from(schema.settings).where(eq(schema.settings.key, "admin_phone")).get();
-  const adminPhone = (settingsRow?.value || c.env.ADMIN_WHATSAPP || "85268810677").replace(/[^\d]/g, "");
+  const adminPhone = (settingsRow?.value || c.env.ADMIN_WHATSAPP || "85262322466").replace(/[^\d]/g, "");
 
   // Pre-filled message for WhatsApp (Salesmartly will receive this and parse slideId)
   const captionSnippet = slide ? slide.caption : "";
@@ -903,7 +903,7 @@ app.post("/api/public/subscribe/request", async (c) => {
     eventData: JSON.stringify({ code }),
   });
 
-  const adminPhone = (c.env.ADMIN_WHATSAPP || "85268810677").replace(/[^\d]/g, "");
+  const adminPhone = (c.env.ADMIN_WHATSAPP || "85262322466").replace(/[^\d]/g, "");
   const message = `我想訂閱阿占隨意語錄 [${code}]\n來自 JameStyle.com`;
   const deepLink = `https://wa.me/${adminPhone}?text=${encodeURIComponent(message)}`;
 

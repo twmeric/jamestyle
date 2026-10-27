@@ -91,7 +91,7 @@ export default function AnalyticsDashboard({ onClose }: Props) {
   const [activeTab, setActiveTab] = useState<'overview' | 'opening' | 'heatmap' | 'fans' | 'emotions' | 'whatsapp' | 'customers' | 'quote-reactions' | 'subscribers'>('overview');
   const [loading, setLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
-  const [adminPhone, setAdminPhone] = useState('85268810677');
+  const [adminPhone, setAdminPhone] = useState('85262322466');
   const [settingsMsg, setSettingsMsg] = useState('');
 
   // Debug: global click tracking
